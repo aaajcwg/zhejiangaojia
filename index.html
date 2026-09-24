@@ -859,8 +859,9 @@ function applyPrices(items, source, date, city){
   });
   let added=0;
   if(toAdd.length){
-    const ok=confirm('数据源中有 '+toAdd.length+' 项材料不在当前库，是否新增到材料库？\n（取消则仅更新已有材料）');
-    if(ok){ toAdd.forEach(it=>{ const m={id:uid('m'),name:it.name,category:it.category||'其他',spec:it.spec||'',unit:it.unit||'',price:it.price}; materials.push(m); map[m.name+'|'+m.spec]=m; added++; }); }
+    // 自动合并新增项（不再弹窗询问，避免新材料被漏掉）
+    toAdd.forEach(it=>{ const m={id:uid('m'),name:it.name,category:it.category||'其他',spec:it.spec||'',unit:it.unit||'',price:it.price}; materials.push(m); map[m.name+'|'+m.spec]=m; added++; });
+    persist();
   }
   renderMaterials(); fillCitySelect();
   setSrcInfo(source,date,city);
