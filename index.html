@@ -164,9 +164,10 @@
     <div class="card no-print" id="srcCard">
       <h2>实时价格来源</h2>
       <div id="srcStatus" class="hint">检测中…</div>
-      <div class="grid g3" style="margin-top:8px;">
+      <div class="grid g2" style="margin-top:8px;">
         <div><label>当前来源（可编辑）</label><input id="srcSource" value="—" placeholder="如：温州信息价 2026-09上旬"></div>
         <div><label>发布日期（可编辑）</label><input id="srcDate" value="" placeholder="如 2026-09-24"></div>
+        <div><label>数据地区（多地区数据源切换）</label><select id="srcRegion"><option value="">—</option></select></div>
         <div><label>基准城市（点选切换）</label><select id="srcBase"></select></div>
       </div>
       <div class="row-actions">
@@ -389,11 +390,23 @@
 
 <script>
 /* ============ 数据层 ============ */
-const CATS = ["水泥及骨料","钢材","砖瓦石材","管材管件","电线电缆","涂料化工","防水保温","门窗","木材板材","五金劳保","其他"];
-const DEFAULT_CITY = {
+const CATS = ["水泥及骨料","砂浆外加剂","钢材","型材钢板","砖瓦石材","管材管件","阀门水暖","电线电缆","电工电料","灯具光源","玻璃制品","涂料化工","防水保温","门窗","木材板材","泵阀消防","紧固焊材","五金劳保","周转材料","其他"];
+/* 价格系数：基准"全国均价"=1.000；31省区市 + 浙江省内11市（均可在大气价格系数中微调） */
+const CITY_FACTOR_ZJ = {
   "杭州":1.000,"宁波":0.985,"温州":1.025,"嘉兴":0.970,"湖州":0.960,
   "绍兴":1.010,"金华":0.980,"衢州":0.950,"舟山":1.030,"台州":1.000,"丽水":0.960
 };
+const CITY_FACTOR_PROV = {
+  "全国均价":1.000,
+  "北京":1.060,"天津":1.010,"上海":1.030,"重庆":0.970,
+  "河北":0.950,"山西":0.950,"内蒙古":0.970,
+  "辽宁":0.960,"吉林":0.940,"黑龙江":0.950,
+  "江苏":0.990,"浙江":1.000,"安徽":0.960,"福建":0.980,"江西":0.940,"山东":0.960,
+  "河南":0.940,"湖北":0.970,"湖南":0.950,"广东":1.040,"广西":0.930,"海南":1.080,
+  "四川":0.960,"贵州":0.970,"云南":0.980,"西藏":1.150,
+  "陕西":0.960,"甘肃":0.970,"青海":1.020,"宁夏":0.970,"新疆":1.030
+};
+const DEFAULT_CITY = Object.assign({}, CITY_FACTOR_PROV, CITY_FACTOR_ZJ);
 function defaultMaterials(){
   const m = [
     ["复合硅酸盐水泥 PO42.5 袋装","水泥及骨料","袋装","吨",390],
@@ -458,7 +471,149 @@ function defaultMaterials(){
     ["铁钉","五金劳保","","kg",6.5],
     ["安全帽","五金劳保","","顶",18],
     ["瓷砖 800×800","其他","800×800","片",45],
-    ["强化木地板","其他","","㎡",95]
+    ["强化木地板","其他","","㎡",95],
+    /* —— 砂浆外加剂 —— */
+    ["砌筑砂浆 M10 预拌","砂浆外加剂","M10","m³",380],
+    ["抹灰砂浆 M15 预拌","砂浆外加剂","M15","m³",390],
+    ["干混砂浆 M10","砂浆外加剂","M10 散装","吨",320],
+    ["石膏砂浆","砂浆外加剂","机制喷抹","m³",420],
+    ["白水泥 425#","砂浆外加剂","425#","kg",1.2],
+    ["生石灰","砂浆外加剂","块灰","吨",420],
+    ["陶粒","砂浆外加剂","10-30mm","m³",260],
+    ["减水剂 聚羧酸","砂浆外加剂","液体 含固10%","吨",2400],
+    ["膨胀剂","砂浆外加剂","UEA","吨",2200],
+    /* —— 钢材补充 —— */
+    ["普通硅酸盐水泥 PO42.5 散装","水泥及骨料","散装","吨",370],
+    ["钢板 Q235 20mm","型材钢板","Q235 20mm 中板","吨",4180],
+    ["无缝钢管 219×6","型材钢板","20# 219×6mm","吨",4950],
+    /* —— 型材钢板 —— */
+    ["方管","型材钢板","Q235 40×40×2.5 6m","根",48],
+    ["方管","型材钢板","Q235 60×60×3.0 6m","根",85],
+    ["矩形管","型材钢板","Q235 80×40×3.0 6m","根",92],
+    ["H型钢","型材钢板","Q235 200×100","吨",4150],
+    ["H型钢","型材钢板","Q345 300×150","吨",4280],
+    ["C型钢","型材钢板","Q235 160×60×20 檩条","m",28],
+    ["圆钢","型材钢板","45# Φ25","吨",4350],
+    ["扁钢","型材钢板","Q235 40×4","m",9.5],
+    ["花纹钢板","型材钢板","Q235 3mm","吨",4350],
+    ["镀锌钢板","型材钢板","DX51D 0.5mm","㎡",26],
+    ["槽钢","型材钢板","Q235 10#","m",42],
+    ["等边角钢","型材钢板","Q235 50×5","m",24],
+    ["钢筋网片","型材钢板","冷轧 Φ6.5 200×200","㎡",32],
+    ["冷轧带肋钢筋","型材钢板","CRB550","吨",4150],
+    /* —— 砖瓦石材补充 —— */
+    ["页岩多孔砖","砖瓦石材","KP1 240×115×90","千块",520],
+    ["混凝土标砖","砖瓦石材","240×115×53","千块",420],
+    ["蒸压加气块","砖瓦石材","B06 600×200×200","m³",270],
+    ["仿石砖","砖瓦石材","300×150 芝麻灰","㎡",65],
+    ["透水砖","砖瓦石材","200×100×60","㎡",78],
+    ["广场砖","砖瓦石材","300×300","㎡",55],
+    /* —— 管材管件补充 —— */
+    ["PVC-U 排水管 DN160","管材管件","DN160 环刚8","m",45],
+    ["PVC-U 排水管件弯头","管材管件","DN110 90°","个",8],
+    ["PE 给水管","管材管件","PE100 dn110 1.0MPa","m",42],
+    ["不锈钢波纹管","管材管件","DN15 编织软管","m",12],
+    ["铝塑复合管","管材管件","1216","m",5.5],
+    /* —— 阀门水暖 —— */
+    ["闸阀","阀门水暖","Z45X-16 暗杆 DN50","个",95],
+    ["闸阀","阀门水暖","Z45X-16 暗杆 DN100","个",210],
+    ["截止阀","阀门水暖","J11W-16 DN50","个",88],
+    ["球阀","阀门水暖","Q11F-16 内丝 DN25","个",25],
+    ["球阀","阀门水暖","Q41F-16 法兰 DN50","个",68],
+    ["止回阀","阀门水暖","H44X-16 对夹 DN100","个",185],
+    ["蝶阀","阀门水暖","D371X-16 对夹 DN150","个",320],
+    ["减压阀","阀门水暖","Y110 比例式 DN50","个",260],
+    ["浮球阀","阀门水暖","DN50 铜体","个",75],
+    ["水表","阀门水暖","旋翼湿式 DN25","个",65],
+    ["水表","阀门水暖","旋翼湿式 DN50","个",160],
+    ["PPR 内丝弯头","阀门水暖","DN25 热熔","个",6.5],
+    ["PPR 三通","阀门水暖","DN25 热熔","个",5.8],
+    ["铜闸阀","阀门水暖","DN15 内丝","个",48],
+    ["地漏","阀门水暖","DN50 304不锈钢","个",28],
+    ["存水弯","阀门水暖","PVC-U DN50","个",9],
+    ["角阀","阀门水暖","4分 铜体","个",15],
+    ["编织软管","阀门水暖","4分 300mm","根",8],
+    ["生料带","阀门水暖","宽20m","卷",2.5],
+    /* —— 电工电料 —— */
+    ["微型断路器","电工电料","DZ47-63 C32 1P","个",28],
+    ["漏电保护器","电工电料","DZ47LE-32 C32 30mA","个",65],
+    ["配电箱","电工电料","明装 12回路 位","个",95],
+    ["墙壁开关","电工电料","86型 单联单控","个",12],
+    ["五孔插座","电工电料","86型 10A","个",15],
+    ["PVC 线管","电工电料","Φ16 中型","m",1.8],
+    ["PVC 线管","电工电料","Φ20 中型","m",2.2],
+    ["镀锌线管","电工电料","JDG Φ20 1.2mm","m",5.5],
+    ["桥架弯头","电工电料","热镀锌 200×100 90°","个",22],
+    ["弱电箱","电工电料","300×400 暗装","个",78],
+    ["网线","电工电料","超五类非屏蔽 305m","箱",285],
+    ["光纤皮线","电工电料","单芯 G657A","m",1.2],
+    ["接线盒","电工电料","86型 PVC","个",1.5],
+    /* —— 灯具光源 —— */
+    ["LED 灯管","灯具光源","T8 1.2m 18W","支",15],
+    ["LED 面板灯","灯具光源","600×600 36W","套",68],
+    ["LED 筒灯","灯具光源","3寸 8W","套",22],
+    ["LED 投光灯","灯具光源","100W IP65","套",85],
+    ["LED 灯带","灯具光源","2835 60珠/m","m",4.5],
+    ["LED 工矿灯","灯具光源","100W","套",128],
+    ["应急照明灯","灯具光源","双头 消防","套",45],
+    /* —— 玻璃制品 —— */
+    ["浮法玻璃 5mm","玻璃制品","5mm 白玻","㎡",38],
+    ["浮法玻璃 8mm","玻璃制品","8mm 白玻","㎡",55],
+    ["钢化玻璃","玻璃制品","8mm","㎡",95],
+    ["钢化玻璃","玻璃制品","10mm","㎡",118],
+    ["中空玻璃","玻璃制品","5+9A+5","㎡",135],
+    ["夹胶玻璃","玻璃制品","5+0.76PVB+5","㎡",165],
+    ["镀膜玻璃","玻璃制品","6mm Low-E","㎡",88],
+    /* —— 泵阀消防 —— */
+    ["潜水泵","泵阀消防","QDX10-38 0.75kW","台",385],
+    ["管道离心泵","泵阀消防","ISW65-160","台",980],
+    ["消火栓箱","泵阀消防","800×650 明装","套",480],
+    ["室内消火栓","泵阀消防","SN65 单出口","个",145],
+    ["灭火器","泵阀消防","MFZ/ABC4 干粉","具",55],
+    ["灭火器","泵阀消防","MFZ/ABC8 干粉","具",95],
+    ["喷淋头","泵阀消防","ZSTX-15 68℃下垂","个",12],
+    ["湿式报警阀","泵阀消防","ZSFZ DN100","套",1250],
+    ["消防水带","泵阀消防","8型-65-25 衬胶","条",98],
+    /* —— 紧固焊材 —— */
+    ["膨胀螺栓","紧固焊材","M10×100 镀锌","套",1.2],
+    ["化学锚栓","紧固焊材","M12×160","套",8.5],
+    ["六角螺栓","紧固焊材","M12×40 4.8级","套",0.8],
+    ["自攻钉","紧固焊材","M4×30 十字 盒装","盒",18],
+    ["焊条","紧固焊材","J422 Φ3.2","kg",6.8],
+    ["焊条","紧固焊材","J507 Φ4.0 低氢","kg",8.5],
+    ["绑扎钢丝","紧固焊材","22# 镀锌","kg",6.5],
+    /* —— 周转材料 —— */
+    ["钢管脚手架","周转材料","Φ48×3.0 6m Q235","根",68],
+    ["扣件","周转材料","十字直角 铸铁","个",6.5],
+    ["扣件","周转材料","对接/旋转 铸铁","个",7],
+    ["钢跳板","周转材料","250×2500 3mm","块",78],
+    ["密目安全网","周转材料","6×1.8m 阻燃","张",25],
+    ["安全带","周转材料","全身五点式","套",65],
+    ["轮扣立杆","周转材料","Φ48 2.4m Q345","根",95],
+    /* —— 防水保温补充 —— */
+    ["聚合物水泥防水涂料","防水保温","JS II型","kg",16],
+    ["无机保温砂浆","防水保温","A型 35kg","袋",35],
+    ["泡沫混凝土","防水保温","B06 现浇","m³",280],
+    ["橡塑保温板","防水保温","B1级 25mm","㎡",55],
+    ["挤塑聚苯板 XPS 50mm","防水保温","50mm B1级","㎡",45],
+    /* —— 门窗补充 —— */
+    ["断桥铝窗","门窗","55系列 中空玻璃","㎡",680],
+    ["断桥铝窗","门窗","70系列 三玻两腔","㎡",850],
+    ["铝合金推拉窗","门窗","80系列 单玻","㎡",380],
+    ["电动卷帘门","门窗","彩钢 0.5mm","㎡",260],
+    ["钢质防火门","门窗","甲级 含五金","㎡",520],
+    ["塑钢窗","门窗","60系列 中空","㎡",320],
+    /* —— 电缆补充 —— */
+    ["铜芯线 BV 6mm²","电线电缆","6mm²","卷(100m)",520],
+    ["电力电缆 YJV 5×6","电线电缆","5×6","m",36],
+    ["电力电缆 YJV 4×35+1×16","电线电缆","4×35+1×16","m",168],
+    /* —— 涂料化工补充 —— */
+    ["环氧富锌底漆","涂料化工","双组份 锌含量60%","kg",32],
+    ["醇酸调和漆","涂料化工","铁红/灰色","kg",16],
+    ["红丹防锈漆","涂料化工","酚醛","kg",15],
+    ["外墙弹性涂料","涂料化工","丙烯酸 弹性","kg",22],
+    ["氟碳漆","涂料化工","双组份 金属面","kg",65],
+    ["环氧地坪漆","涂料化工","溶剂型 面涂","kg",25]
   ];
   return m.map((r,i)=>({id:"m"+(i+1),name:r[0],category:r[1],spec:r[2],unit:r[3],price:r[4]}));
 }
@@ -477,6 +632,7 @@ let settings = load(LS.set, {
 });
 if(!settings.baseCity) settings.baseCity="杭州";
 if(!settings.cityFactors) settings.cityFactors=DEFAULT_CITY;
+else Object.keys(DEFAULT_CITY).forEach(k=>{ if(settings.cityFactors[k]===undefined) settings.cityFactors[k]=DEFAULT_CITY[k]; }); // 老数据迁移：补全新增地区系数
 if(!settings.dataUrl) settings.dataUrl="./prices.json";
 if(settings.useProxy===undefined) settings.useProxy=false;
 
@@ -673,10 +829,8 @@ document.getElementById('impFile').onchange=e=>{
 
 /* ============ 数据源（纯前端 / 实时价） ============ */
 function fillBaseCitySelect(){
-  const sel=document.getElementById('srcBase'); sel.innerHTML='';
-  Object.keys(settings.cityFactors||DEFAULT_CITY).forEach(c=>{
-    const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o);
-  });
+  const sel=document.getElementById('srcBase');
+  fillFactorGroups(sel,false);
 }
 function setSrcInfo(source,date,city){
   if(source!=null && source!=='') settings.srcLabel=source;
@@ -737,6 +891,28 @@ function splitCsvLine(line){
 }
 
 /* 拉取数据源地址（核心：实时价） */
+let _lastPriceData=null; // 缓存最近一次拉取的数据（用于切换数据地区）
+function fillRegionSelect(d){
+  const sel=document.getElementById('srcRegion'); sel.innerHTML='';
+  if(d && d.regions && typeof d.regions==='object'){
+    Object.keys(d.regions).forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; sel.appendChild(o); });
+    if(settings.dataRegion && [...sel.options].some(o=>o.value===settings.dataRegion)) sel.value=settings.dataRegion;
+  }else{
+    const o=document.createElement('option'); o.value=''; o.textContent='—'; sel.appendChild(o);
+  }
+}
+function extractRegion(d,regionName){
+  // 支持 v2 多地区格式 {regions:{...}} 与旧单地区格式 {city,date,items} / 数组
+  if(Array.isArray(d)) return {items:d, source:'远程', date:today(), city:regionName||settings.baseCity||'杭州'};
+  if(d.regions){
+    const key=regionName || settings.dataRegion || Object.keys(d.regions)[0];
+    const r=d.regions[key];
+    if(!r) throw new Error('数据源中不存在地区「'+key+'」');
+    return {items:r.items||[], source:r.source||('远程·'+key), date:r.date||today(), city:key};
+  }
+  if(d.items) return {items:d.items, source:d.source||'远程', date:d.date||today(), city:d.city||settings.baseCity||'杭州'};
+  throw new Error('JSON 格式不符（需含 regions 或 items）');
+}
 async function syncPrices(auto){
   const url=settings.dataUrl||'./prices.json';
   try{
@@ -744,14 +920,16 @@ async function syncPrices(auto){
     const r=await fetch(url,{signal:ctrl.signal,cache:'no-store'}); clearTimeout(t);
     if(!r.ok) throw new Error('HTTP '+r.status);
     let d=await r.json();
-    let items, city=d.city||settings.baseCity||'杭州', date=d.date||today(), source=d.source||('远程 '+url);
-    if(Array.isArray(d)){ items=d; }
-    else if(d.items){ items=d.items; }
-    else throw new Error('JSON 格式不符（需含 items 数组或本身为数组）');
+    _lastPriceData=d;
+    fillRegionSelect(d);
+    const sel=document.getElementById('srcRegion');
+    const region=sel.value||null;
+    const {items,source,date,city}=extractRegion(d,region);
     if(!items.length) throw new Error('数据源为空');
+    if(city) settings.dataRegion=city;
     applyPrices(items, source, date, city);
     setSrcStatus('src-online','● 已连接实时数据源');
-    if(!auto) alert('已同步价格\n来源：'+source+'\n城市：'+city+'\n发布日期：'+date+'\n更新/新增：'+items.length+' 项');
+    if(!auto) alert('已同步价格\n来源：'+source+'\n地区：'+city+'\n发布日期：'+date+'\n更新/新增：'+items.length+' 项');
     return true;
   }catch(e){
     // 失败：尝试 CORS 代理（仅作兜底提示，不会拿到结构化价格）
@@ -843,16 +1021,44 @@ document.getElementById('srcBase').addEventListener('change',e=>{
   renderMaterials(); fillCitySelect();
   document.getElementById('srcMsg').textContent='基准城市已切换为「'+settings.baseCity+'」：材料库与报价选材将按「目标城市 ÷ '+settings.baseCity+'」换算单价（已填入报价单的单价不变）。';
 });
+document.getElementById('srcRegion').addEventListener('change',e=>{
+  // 切换数据地区：用缓存的数据立即应用所选地区价格
+  const d=_lastPriceData; const key=e.target.value;
+  if(!d) return;
+  try{
+    const {items,source,date,city}=extractRegion(d,key);
+    if(!items.length) throw new Error('该地区无数据');
+    settings.dataRegion=city; persist();
+    applyPrices(items, source, date, city);
+    document.getElementById('srcMsg').textContent='已切换到「'+city+'」地区数据（'+items.length+' 项）。';
+  }catch(err){
+    document.getElementById('srcMsg').textContent='切换地区失败：'+err.message;
+  }
+});
 
 /* ============ 报价单 ============ */
+const PROV_ORDER=["全国均价","北京","天津","上海","重庆","河北","山西","内蒙古","辽宁","吉林","黑龙江","江苏","浙江","安徽","福建","江西","山东","河南","湖北","湖南","广东","广西","海南","四川","贵州","云南","西藏","陕西","甘肃","青海","宁夏","新疆"];
+const ZJ_ORDER=Object.keys(CITY_FACTOR_ZJ);
+function fillFactorGroups(sel,showFactor){
+  sel.innerHTML='';
+  const add=(label,keys)=>{
+    const list=keys.filter(c=>settings.cityFactors[c]!==undefined);
+    if(!list.length) return;
+    const g=document.createElement('optgroup'); g.label=label;
+    list.forEach(c=>{
+      const o=document.createElement('option'); o.value=c;
+      o.textContent=showFactor? c+'（×'+cityFactor(c).toFixed(2)+'）' : c;
+      g.appendChild(o);
+    });
+    sel.appendChild(g);
+  };
+  add('浙江省内（杭州基准）',ZJ_ORDER);
+  add('全国·省级行政区',PROV_ORDER);
+}
 function fillCitySelect(){
-  const sel=document.getElementById('q_city'); sel.innerHTML='';
-  Object.keys(settings.cityFactors).forEach(c=>{
-    const o=document.createElement('option');
-    const rel=cityFactor(c);
-    o.value=c; o.textContent=c+'（×'+rel.toFixed(2)+'）'; sel.appendChild(o);
-  });
-  if(!sel.value) sel.value=Object.keys(settings.cityFactors)[0];
+  const sel=document.getElementById('q_city');
+  fillFactorGroups(sel,true);
+  if(!sel.value || ![...sel.options].some(o=>o.value===sel.value)) sel.value=settings.baseCity||'杭州';
 }
 
 function newQuote(){
