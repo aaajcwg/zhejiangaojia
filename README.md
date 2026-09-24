@@ -37,7 +37,7 @@
 
 | 文件 | 说明 |
 |------|------|
-| `zhejiang-building-material-quote.html` | 主程序（单文件，手机自适应） |
+| `index.html` | 主程序（单文件，手机自适应）；仓库根路径 `https://aaajcwg.github.io/zhejiangaojia/` 直接打开 |
 | `prices.json` | 示例价格数据（杭州基准，51 项），托管后默认数据源 |
 | `server.js` | 可选纯静态托管脚本（零依赖，`node server.js` 起服务） |
 
