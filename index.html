@@ -165,9 +165,9 @@
       <h2>实时价格来源</h2>
       <div id="srcStatus" class="hint">检测中…</div>
       <div class="grid g3" style="margin-top:8px;">
-        <div><label>当前来源</label><input id="srcSource" value="—" readonly></div>
-        <div><label>发布日期</label><input id="srcDate" value="—" readonly></div>
-        <div><label>基准城市</label><input id="srcBase" value="杭州" readonly></div>
+        <div><label>当前来源（可编辑）</label><input id="srcSource" value="—" placeholder="如：温州信息价 2026-09上旬"></div>
+        <div><label>发布日期（可编辑）</label><input id="srcDate" value="" placeholder="如 2026-09-24"></div>
+        <div><label>基准城市（点选切换）</label><select id="srcBase"></select></div>
       </div>
       <div class="row-actions">
         <button class="btn sm" id="btnSync">同步最新价</button>
@@ -658,10 +658,25 @@ document.getElementById('impFile').onchange=e=>{
 };
 
 /* ============ 数据源（纯前端 / 实时价） ============ */
+function fillBaseCitySelect(){
+  const sel=document.getElementById('srcBase'); sel.innerHTML='';
+  Object.keys(settings.cityFactors||DEFAULT_CITY).forEach(c=>{
+    const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o);
+  });
+}
 function setSrcInfo(source,date,city){
-  document.getElementById('srcSource').value=source||'—';
-  document.getElementById('srcDate').value=date||'—';
-  document.getElementById('srcBase').value=city||settings.baseCity||'杭州';
+  if(source!=null && source!=='') settings.srcLabel=source;
+  if(date!=null) settings.srcDateLabel=date;
+  if(city) settings.baseCity=city;
+  fillBaseCitySelect();
+  const sel=document.getElementById('srcBase');
+  if(settings.baseCity && ![...sel.options].some(o=>o.value===settings.baseCity)){
+    const o=document.createElement('option'); o.value=settings.baseCity; o.textContent=settings.baseCity; sel.appendChild(o);
+  }
+  sel.value=settings.baseCity||'杭州';
+  document.getElementById('srcSource').value=settings.srcLabel||'—';
+  document.getElementById('srcDate').value=settings.srcDateLabel||'';
+  persist();
 }
 function setSrcStatus(cls,text){ document.getElementById('srcStatus').innerHTML='<span class="'+cls+'">'+text+'</span>'; }
 
@@ -679,7 +694,6 @@ function applyPrices(items, source, date, city){
     const ok=confirm('数据源中有 '+toAdd.length+' 项材料不在当前库，是否新增到材料库？\n（取消则仅更新已有材料）');
     if(ok){ toAdd.forEach(it=>{ const m={id:uid('m'),name:it.name,category:it.category||'其他',spec:it.spec||'',unit:it.unit||'',price:it.price}; materials.push(m); map[m.name+'|'+m.spec]=m; added++; }); }
   }
-  settings.baseCity=city; persist();
   renderMaterials(); fillCitySelect();
   setSrcInfo(source,date,city);
 }
@@ -802,6 +816,19 @@ document.getElementById('csvFile').onchange=async e=>{
   await importCsvFile(f);
   e.target.value='';
 };
+
+/* 数据来源卡片：手动编辑来源/日期，切换基准城市 */
+document.getElementById('srcSource').addEventListener('change',e=>{
+  settings.srcLabel=e.target.value.trim(); persist();
+});
+document.getElementById('srcDate').addEventListener('change',e=>{
+  settings.srcDateLabel=e.target.value.trim(); persist();
+});
+document.getElementById('srcBase').addEventListener('change',e=>{
+  settings.baseCity=e.target.value; persist();
+  renderMaterials(); fillCitySelect();
+  document.getElementById('srcMsg').textContent='基准城市已切换为「'+settings.baseCity+'」：材料库与报价选材将按「目标城市 ÷ '+settings.baseCity+'」换算单价（已填入报价单的单价不变）。';
+});
 
 /* ============ 报价单 ============ */
 function fillCitySelect(){
@@ -1040,7 +1067,7 @@ function boot(){
   renderMaterials();
   fillCitySelect();
   newQuote();
-  setSrcInfo('本地缓存', '—', settings.baseCity||'杭州');
+  setSrcInfo(settings.srcLabel||'本地缓存/内置参考价', settings.srcDateLabel||'', null);
   // 打开时自动拉取实时价
   if(location.protocol!=='file:'){
     setSrcStatus('src-warn','● 正在拉取实时价…');
