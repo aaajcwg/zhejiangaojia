@@ -152,6 +152,7 @@
 <nav>
   <button data-tab="quote" class="active">报价单</button>
   <button data-tab="stock">材料库</button>
+  <button data-tab="craft">工艺标准</button>
   <button data-tab="settings">设置</button>
 </nav>
 
@@ -290,6 +291,19 @@
         </table>
       </div>
       <div class="hint">提示：报价时单价＝基准价 ×（所选城市相对基准城市的系数）。同步造价信息价后基准价即更新。</div>
+    </div>
+  </section>
+
+  <!-- 工艺标准 -->
+  <section id="tab-craft" class="switch-tab">
+    <div class="card no-print">
+      <h2>施工工艺标准（六顺工作法）</h2>
+      <div class="toolbar">
+        <div class="f"><label>搜索</label><input id="c_search" placeholder="工艺名称关键词，如：防水 / 吊顶"></div>
+        <div class="f" style="max-width:40%;"><label>分类</label><select id="c_cat"></select></div>
+      </div>
+      <div id="craftList" style="margin-top:10px;"></div>
+      <div class="hint">点击任一工艺即可在线浏览 PDF（浏览器内打开，可缩放/下载）。共 89 份，由公司《六顺工作法》工艺库发布。</div>
     </div>
   </section>
 
@@ -696,6 +710,39 @@ document.querySelectorAll('nav button').forEach(b=>{
     window.scrollTo(0,0);
   };
 });
+
+/* ============ 工艺标准 ============ */
+const CRAFT_DOCS=[{"f":"002--高密度聚乙烯自粘胶膜防水卷材预铺反粘工艺.pdf","c":"防水工程"},{"f":"004--地下室外墙防水施工工艺.pdf","c":"防水工程"},{"f":"【040】卫生间防水（聚脲）施工工艺.pdf","c":"防水工程"},{"f":"【041】砼屋面防水（聚脲）施工工艺.pdf","c":"防水工程"},{"f":"【042】砼屋面防水（卷材）施工工艺.pdf","c":"防水工程"},{"f":"【043】砼屋面防水（发泡+聚脲）施工工艺.pdf","c":"防水工程"},{"f":"005--不锈钢焊接屋面施工工艺.pdf","c":"屋面工程"},{"f":"011--屋面聚氨酯发泡施工工艺.pdf","c":"屋面工程"},{"f":"012--屋面铝箔铺贴施工工艺.pdf","c":"屋面工程"},{"f":"【050】防雷（接地及屋面）施工工艺.pdf","c":"屋面工程"},{"f":"屋面硫酸钡板安装.pdf","c":"屋面工程"},{"f":"003--筏板基础施工工艺.pdf","c":"基础与混凝土"},{"f":"【021】基础土方开挖、回填施工工艺.pdf","c":"基础与混凝土"},{"f":"【022】水泥搅拌桩施工工艺.pdf","c":"基础与混凝土"},{"f":"【023】管桩（锤击）施工工艺.pdf","c":"基础与混凝土"},{"f":"【024】管桩（静压）施工工艺.pdf","c":"基础与混凝土"},{"f":"【025】混凝土楼板施工工艺.pdf","c":"基础与混凝土"},{"f":"【026】混凝土挡土墙施工工艺.pdf","c":"基础与混凝土"},{"f":"【027】地下室混凝土墙板施工工艺.pdf","c":"基础与混凝土"},{"f":"【028】加气块砌筑施工工艺.pdf","c":"基础与混凝土"},{"f":"【029】砖块墙体砌筑施工工艺.pdf","c":"基础与混凝土"},{"f":"【052】厂房（带地下室）干挂龙门架安装施工工艺.pdf","c":"基础与混凝土"},{"f":"【053】办公楼、综合楼（不带地下室）干挂龙门架安装施工工艺.pdf","c":"基础与混凝土"},{"f":"【064】构造柱、圈梁施工工艺.pdf","c":"基础与混凝土"},{"f":"【068】场地土方平整施工工艺.pdf","c":"基础与混凝土"},{"f":"【069】成品砖胎模施工工艺.pdf","c":"基础与混凝土"},{"f":"【072】三代厂房支模架、压型板、钢丝网片及辐射管施工工艺.pdf","c":"基础与混凝土"},{"f":"【073】旋挖桩施工工艺.pdf","c":"基础与混凝土"},{"f":"围墙护坡桩施工工艺.pdf","c":"基础与混凝土"},{"f":"旋挖桩施工工艺.pdf","c":"基础与混凝土"},{"f":"013--钢柱、钢梁、檩条、下层板施工工艺.pdf","c":"钢结构"},{"f":"014--墙面板（岩棉板）安装施工工艺.pdf","c":"钢结构"},{"f":"015--墙面板（单板横装）施工工艺.pdf","c":"钢结构"},{"f":"016--墙面板（单板竖装）施工工艺.pdf","c":"钢结构"},{"f":"018--钢构件油漆施工工艺.pdf","c":"钢结构"},{"f":"019--宿舍门框钢架施工工艺.pdf","c":"钢结构"},{"f":"【044】钢筋桁架楼承板安装施工工艺.pdf","c":"钢结构"},{"f":"【045】开口式楼承板安装施工工艺.pdf","c":"钢结构"},{"f":"【046】钢结构防火涂料（膨胀型）施工工艺.pdf","c":"钢结构"},{"f":"【058】钢纤维（浮动）地坪施工工艺.pdf","c":"钢结构"},{"f":"【063】钢柱包柱脚施工工艺.pdf","c":"钢结构"},{"f":"【074】825彩钢板安装施工工艺.pdf","c":"钢结构"},{"f":"【078】防腐施工工艺.pdf","c":"钢结构"},{"f":"【079】钢结构防火涂料（非膨胀型）施工工艺.pdf","c":"钢结构"},{"f":"框架梁、桁架板油漆喷涂施工工艺.pdf","c":"钢结构"},{"f":"006--车间地坪施工工艺.pdf","c":"装饰装修"},{"f":"007--真石漆施工工艺.pdf","c":"装饰装修"},{"f":"008--环氧地坪施工工艺.pdf","c":"装饰装修"},{"f":"009--地砖铺贴施工工艺.pdf","c":"装饰装修"},{"f":"010--墙砖铺贴施工工艺.pdf","c":"装饰装修"},{"f":"017--塑钢窗制作及安装工艺.pdf","c":"装饰装修"},{"f":"ALC外墙板施工工艺.pdf","c":"装饰装修"},{"f":"【030】ALC墙板安装施工工艺.pdf","c":"装饰装修"},{"f":"【031】隔断（钢化玻璃）施工工艺.pdf","c":"装饰装修"},{"f":"【032】集成墙板饰面安装施工工艺.pdf","c":"装饰装修"},{"f":"【033】集成卫浴安装施工工艺.pdf","c":"装饰装修"},{"f":"【034】吊顶（集成墙板）施工工艺.pdf","c":"装饰装修"},{"f":"【035】吊顶（铝扣板）安装施工工艺.pdf","c":"装饰装修"},{"f":"【036】吊顶（铝蜂窝）安装施工工艺.pdf","c":"装饰装修"},{"f":"【037】不锈钢围墙安装施工工艺.pdf","c":"装饰装修"},{"f":"【038】不锈钢扶手安装施工工艺.pdf","c":"装饰装修"},{"f":"【039】不锈钢栏杆安装施工工艺.pdf","c":"装饰装修"},{"f":"【047】划线（地坪漆）施工工艺.pdf","c":"装饰装修"},{"f":"【048】划线（热熔-冷喷）施工工艺.pdf","c":"装饰装修"},{"f":"【049】内墙涂料施工工艺.pdf","c":"装饰装修"},{"f":"【054】卫生间隔断施工工艺.pdf","c":"装饰装修"},{"f":"【056】集成卫浴底板发泡水泥施工工艺.pdf","c":"装饰装修"},{"f":"【057】地坪铠甲缝安装施工工艺.pdf","c":"装饰装修"},{"f":"【059】花岗岩地面、踏步施工工艺.pdf","c":"装饰装修"},{"f":"【060】安旷板、PVC塑胶地板铺设施工工艺.pdf","c":"装饰装修"},{"f":"【070】花圃围墙苗木种植施工工艺.pdf","c":"装饰装修"},{"f":"【071】石材干挂幕墙安装施工工艺.pdf","c":"装饰装修"},{"f":"【075】吊顶（铝方通）安装施工工艺.pdf","c":"装饰装修"},{"f":"【076】铝合金窗制作及安装施工工艺.pdf","c":"装饰装修"},{"f":"【077】铝合金百叶窗制作及安装施工工艺.pdf","c":"装饰装修"},{"f":"伸缩缝处铠甲缝安装（后装法）.pdf","c":"装饰装修"},{"f":"室内墙体、墙砖、地砖拆除施工工艺.pdf","c":"装饰装修"},{"f":"铝合金窗拆除施工工艺.pdf","c":"装饰装修"},{"f":"【051】暖通空调安装施工工艺.pdf","c":"机电安装"},{"f":"【055】卫生间大、小便器安装施工工艺.pdf","c":"机电安装"},{"f":"【061】电缆桥架安装施工工艺.pdf","c":"机电安装"},{"f":"【062】抗震支架安装施工工艺.pdf","c":"机电安装"},{"f":"【065】虹吸管道安装施工工艺.pdf","c":"机电安装"},{"f":"【066】停车棚电气安装施工工艺.pdf","c":"机电安装"},{"f":"【067】停车场限位器（钢管式）安装施工工艺.pdf","c":"机电安装"},{"f":"室内消防管道、消防箱安装施工工艺.pdf","c":"机电安装"},{"f":"020--室外工程施工工艺.pdf","c":"室外与园林"},{"f":"000关于《建设工程施工工艺标准》更新发布通知【工程团队〔2023〕4号】20230930.pdf","c":"综合管理"},{"f":"001--建设工程施工设施方案.pdf","c":"综合管理"}];
+const CRAFT_CATS=[...new Set(CRAFT_DOCS.map(d=>d.c))];
+function craftName(f){ return f.replace(/\.pdf$/i,''); }
+function renderCraft(){
+  const q=(document.getElementById('c_search').value||'').trim().toLowerCase();
+  const cat=document.getElementById('c_cat').value;
+  const list=CRAFT_DOCS.filter(d=>(!cat||d.c===cat)&&(!q||d.f.toLowerCase().includes(q)));
+  const box=document.getElementById('craftList');
+  if(!list.length){ box.innerHTML='<div style="text-align:center;color:var(--muted,#888);padding:24px 0;">没有匹配的工艺</div>'; return; }
+  let html='';
+  CRAFT_CATS.forEach(c=>{
+    const items=list.filter(d=>d.c===c);
+    if(!items.length) return;
+    html+='<div style="margin:14px 0 6px;font-weight:600;color:#1a56c9;">'+c+' <span style="font-weight:400;color:#999;font-size:12px;">('+items.length+')</span></div>';
+    html+='<div class="grid g2" style="gap:8px;">';
+    items.forEach(d=>{
+      const t=craftName(d.f);
+      html+='<a href="docs/'+encodeURIComponent(d.f)+'" target="_blank" rel="noopener" class="card" style="margin:0;padding:10px 12px;font-size:14px;text-decoration:none;color:inherit;display:block;line-height:1.5;">📄 '+t+'</a>';
+    });
+    html+='</div>';
+  });
+  box.innerHTML=html;
+}
+function initCraft(){
+  const sel=document.getElementById('c_cat'); sel.innerHTML='';
+  const o=document.createElement('option'); o.value=''; o.textContent='全部分类'; sel.appendChild(o);
+  CRAFT_CATS.forEach(c=>{ const op=document.createElement('option'); op.value=c; op.textContent=c; sel.appendChild(op); });
+  document.getElementById('c_search').addEventListener('input',renderCraft);
+  sel.addEventListener('change',renderCraft);
+  renderCraft();
+}
 
 /* ============ 设置页渲染 ============ */
 function renderSettings(){
@@ -1288,6 +1335,7 @@ function boot(){
   renderMaterials();
   fillCitySelect();
   newQuote();
+  initCraft();
   setSrcInfo(settings.srcLabel||'本地缓存/内置参考价', settings.srcDateLabel||'', null);
   // 打开时自动拉取实时价
   if(location.protocol!=='file:'){
