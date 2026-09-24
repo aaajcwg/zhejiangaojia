@@ -1,0 +1,35 @@
+name: update-prices
+
+on:
+  schedule:
+    # 每周一、周四 02:00 UTC（北京时间 10:00）运行；国家统计局数据按旬发布
+    - cron: "0 2 * * 1,4"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 抓取国家统计局大宗建材价格
+        run: python scripts/fetch_prices.py
+
+      - name: 有变更则提交
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add prices.json
+          if git diff --cached --quiet; then
+            echo "价格无变化，跳过提交"
+          else
+            git commit -m "chore: 自动更新全国大宗建材价格（国家统计局）"
+            git push
+          fi
