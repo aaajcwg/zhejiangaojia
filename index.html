@@ -1363,7 +1363,7 @@ function boot(){
    修改密码：把下面 ACCESS_HASH 换成新密码的 SHA-256 即可。
    在线生成：https://emn178.github.io/online-tools/sha256.html
 */
-const ACCESS_HASH = 'e9c4deaacd82292a759348d9312c8211f459419336bba5165b4a5bdda929d505';
+const ACCESS_HASH = 'ac10fefe5baa2b552ad9b671fcb917d837ee69e02230cf377b318dfe3d2f9030';
 function sha256Hex(s){
   return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))
     .then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join(''));
