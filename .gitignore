@@ -1,0 +1,14 @@
+# WorkBuddy 项目元数据（不入库）
+.workbuddy/
+
+# 本地运行产生的数据/缓存
+data/
+_check*.js
+
+# Node（server.js 为零依赖单文件，无需 node_modules）
+node_modules/
+
+# OS / 编辑器
+.DS_Store
+Thumbs.db
+*.log
