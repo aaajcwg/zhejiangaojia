@@ -141,6 +141,17 @@
 </style>
 </head>
 <body>
+<!-- 访问密码门禁：未解锁时整页覆盖，解锁前不加载任何业务数据 -->
+<div id="gate" style="position:fixed;inset:0;z-index:9999;background:#0f172a;display:flex;align-items:center;justify-content:center;font-family:-apple-system,system-ui,'Microsoft YaHei',sans-serif;">
+  <div style="background:#fff;border-radius:16px;padding:30px 26px;width:min(90vw,340px);box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center;">
+    <div style="font-size:21px;font-weight:700;color:#0f172a;margin-bottom:4px;">浙江建材报价</div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:20px;">请输入访问密码</div>
+    <input id="gatePwd" type="password" inputmode="text" placeholder="访问密码" autofocus style="width:100%;box-sizing:border-box;padding:13px 14px;font-size:16px;border:1px solid #cbd5e1;border-radius:10px;outline:none;">
+    <button id="gateBtn" style="width:100%;margin-top:14px;padding:13px;font-size:16px;font-weight:600;color:#fff;background:#2563eb;border:none;border-radius:10px;cursor:pointer;">进入系统</button>
+    <div id="gateErr" style="color:#dc2626;font-size:13px;margin-top:10px;min-height:16px;"></div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:14px;">本页为公开站点，门禁仅做基础访问控制</div>
+  </div>
+</div>
 <header>
   <div>
     <h1>浙江建材报价</h1>
@@ -1346,7 +1357,31 @@ function boot(){
     document.getElementById('srcMsg').textContent='你是以本地文件方式打开，价格用的是本地缓存/内置参考价。把本页放到 Web 服务器后即可自动拉取实时价。';
   }
 }
-boot();
+
+/* ============ 访问密码门禁 ============
+   默认密码：zjbj8888 （SHA-256 见下）
+   修改密码：把下面 ACCESS_HASH 换成新密码的 SHA-256 即可。
+   在线生成：https://emn178.github.io/online-tools/sha256.html
+*/
+const ACCESS_HASH = 'e9c4deaacd82292a759348d9312c8211f459419336bba5165b4a5bdda929d505';
+function sha256Hex(s){
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))
+    .then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join(''));
+}
+function gateUnlock(){ document.getElementById('gate').style.display='none'; boot(); }
+async function tryUnlock(){
+  const v = document.getElementById('gatePwd').value;
+  const err = document.getElementById('gateErr');
+  if(!v){ err.textContent='请输入密码'; return; }
+  const h = await sha256Hex(v);
+  if(h === ACCESS_HASH){ sessionStorage.setItem('gate_ok','1'); gateUnlock(); }
+  else { err.textContent='密码错误，请重试'; document.getElementById('gatePwd').value=''; }
+}
+(function(){
+  if(sessionStorage.getItem('gate_ok') === '1'){ gateUnlock(); return; }
+  document.getElementById('gateBtn').addEventListener('click', tryUnlock);
+  document.getElementById('gatePwd').addEventListener('keydown', e => { if(e.key === 'Enter') tryUnlock(); });
+})();
 </script>
 </body>
 </html>
