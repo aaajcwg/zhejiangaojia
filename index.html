@@ -569,9 +569,11 @@ document.getElementById('s_proxy').onchange=e=>{ settings.useProxy=e.target.chec
 
 /* ============ 材料库渲染 ============ */
 function fillCatSelect(el, withAll){
+  const prev=el.value; // 保留当前选中值，避免重建后被重置
   el.innerHTML='';
   if(withAll){ const o=document.createElement('option'); o.value=''; o.textContent='全部分类'; el.appendChild(o); }
   CATS.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; el.appendChild(o); });
+  if([...el.options].some(o=>o.value===prev)) el.value=prev;
 }
 function renderMaterials(){
   fillCatSelect(document.getElementById('m_cat'), true);
