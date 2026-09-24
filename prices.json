@@ -1,449 +1,550 @@
 {
-  "city": "杭州",
-  "date": "2026-09-24",
-  "source": "内置参考价（示例，需校对）",
-  "items": [
-    {
-      "name": "复合硅酸盐水泥 PO42.5 袋装",
-      "category": "水泥及骨料",
-      "spec": "袋装",
-      "unit": "吨",
-      "price": 390
+  "version": 2,
+  "updated": "2026-09-24",
+  "regions": {
+    "浙江": {
+      "date": "2026-09-24",
+      "source": "内置参考价（示例，需校对）",
+      "items": [
+        {
+          "name": "复合硅酸盐水泥 PO42.5 袋装",
+          "category": "水泥及骨料",
+          "spec": "袋装",
+          "unit": "吨",
+          "price": 390
+        },
+        {
+          "name": "复合硅酸盐水泥 PO42.5 散装",
+          "category": "水泥及骨料",
+          "spec": "散装",
+          "unit": "吨",
+          "price": 365
+        },
+        {
+          "name": "普通硅酸盐水泥 PO52.5",
+          "category": "水泥及骨料",
+          "spec": "",
+          "unit": "吨",
+          "price": 430
+        },
+        {
+          "name": "中砂（河砂）",
+          "category": "水泥及骨料",
+          "spec": "中砂",
+          "unit": "吨",
+          "price": 135
+        },
+        {
+          "name": "碎石 5-20mm",
+          "category": "水泥及骨料",
+          "spec": "5-20mm",
+          "unit": "吨",
+          "price": 115
+        },
+        {
+          "name": "碎石 20-40mm",
+          "category": "水泥及骨料",
+          "spec": "20-40mm",
+          "unit": "吨",
+          "price": 110
+        },
+        {
+          "name": "商品混凝土 C15",
+          "category": "水泥及骨料",
+          "spec": "C15",
+          "unit": "m³",
+          "price": 380
+        },
+        {
+          "name": "商品混凝土 C30",
+          "category": "水泥及骨料",
+          "spec": "C30",
+          "unit": "m³",
+          "price": 430
+        },
+        {
+          "name": "商品混凝土 C50",
+          "category": "水泥及骨料",
+          "spec": "C50",
+          "unit": "m³",
+          "price": 510
+        },
+        {
+          "name": "螺纹钢 HRB400 Φ12",
+          "category": "钢材",
+          "spec": "Φ12",
+          "unit": "吨",
+          "price": 3920
+        },
+        {
+          "name": "螺纹钢 HRB400 Φ16-25",
+          "category": "钢材",
+          "spec": "Φ16-25",
+          "unit": "吨",
+          "price": 3800
+        },
+        {
+          "name": "盘螺 HRB400 Φ8-10",
+          "category": "钢材",
+          "spec": "Φ8-10",
+          "unit": "吨",
+          "price": 3980
+        },
+        {
+          "name": "高线 HPB300 Φ6.5-10",
+          "category": "钢材",
+          "spec": "Φ6.5-10",
+          "unit": "吨",
+          "price": 3920
+        },
+        {
+          "name": "工字钢 Q235",
+          "category": "钢材",
+          "spec": "",
+          "unit": "吨",
+          "price": 4100
+        },
+        {
+          "name": "角钢 Q235",
+          "category": "钢材",
+          "spec": "",
+          "unit": "吨",
+          "price": 4050
+        },
+        {
+          "name": "烧结普通砖 240×115×53",
+          "category": "砖瓦石材",
+          "spec": "240×115×53",
+          "unit": "千块",
+          "price": 390
+        },
+        {
+          "name": "烧结多孔砖 KP1",
+          "category": "砖瓦石材",
+          "spec": "KP1",
+          "unit": "千块",
+          "price": 460
+        },
+        {
+          "name": "加气混凝土砌块",
+          "category": "砖瓦石材",
+          "spec": "600×200×100",
+          "unit": "m³",
+          "price": 290
+        },
+        {
+          "name": "大理石板材 600×600",
+          "category": "砖瓦石材",
+          "spec": "600×600",
+          "unit": "㎡",
+          "price": 185
+        },
+        {
+          "name": "花岗岩板材 600×600",
+          "category": "砖瓦石材",
+          "spec": "600×600",
+          "unit": "㎡",
+          "price": 225
+        },
+        {
+          "name": "天然砂岩",
+          "category": "砖瓦石材",
+          "spec": "",
+          "unit": "㎡",
+          "price": 160
+        },
+        {
+          "name": "PVC-U 排水管 DN110",
+          "category": "管材管件",
+          "spec": "DN110",
+          "unit": "m",
+          "price": 19
+        },
+        {
+          "name": "PPR 冷水管 DN25",
+          "category": "管材管件",
+          "spec": "DN25",
+          "unit": "m",
+          "price": 7.0
+        },
+        {
+          "name": "PPR 热水管 DN20",
+          "category": "管材管件",
+          "spec": "DN20",
+          "unit": "m",
+          "price": 6.5
+        },
+        {
+          "name": "镀锌钢管 DN100",
+          "category": "管材管件",
+          "spec": "DN100",
+          "unit": "m",
+          "price": 68
+        },
+        {
+          "name": "焊接钢管 DN50",
+          "category": "管材管件",
+          "spec": "DN50",
+          "unit": "m",
+          "price": 32
+        },
+        {
+          "name": "PE 给水管 DN63",
+          "category": "管材管件",
+          "spec": "DN63",
+          "unit": "m",
+          "price": 14
+        },
+        {
+          "name": "铸铁排水管 DN150",
+          "category": "管材管件",
+          "spec": "DN150",
+          "unit": "m",
+          "price": 95
+        },
+        {
+          "name": "铜芯线 BV 2.5mm²",
+          "category": "电线电缆",
+          "spec": "2.5mm²",
+          "unit": "卷(100m)",
+          "price": 230
+        },
+        {
+          "name": "铜芯线 BV 4mm²",
+          "category": "电线电缆",
+          "spec": "4mm²",
+          "unit": "卷(100m)",
+          "price": 360
+        },
+        {
+          "name": "电力电缆 YJV 3×4",
+          "category": "电线电缆",
+          "spec": "3×4",
+          "unit": "m",
+          "price": 23
+        },
+        {
+          "name": "电力电缆 YJV 4×16",
+          "category": "电线电缆",
+          "spec": "4×16",
+          "unit": "m",
+          "price": 78
+        },
+        {
+          "name": "电缆桥架 200×100",
+          "category": "电线电缆",
+          "spec": "200×100",
+          "unit": "m",
+          "price": 55
+        },
+        {
+          "name": "内墙乳胶漆 18L",
+          "category": "涂料化工",
+          "spec": "18L",
+          "unit": "桶",
+          "price": 330
+        },
+        {
+          "name": "外墙真石漆",
+          "category": "涂料化工",
+          "spec": "",
+          "unit": "kg",
+          "price": 9.5
+        },
+        {
+          "name": "腻子粉",
+          "category": "涂料化工",
+          "spec": "20kg",
+          "unit": "袋",
+          "price": 28
+        },
+        {
+          "name": "界面剂",
+          "category": "涂料化工",
+          "spec": "18L",
+          "unit": "桶",
+          "price": 150
+        },
+        {
+          "name": "SBS 防水卷材 4mm",
+          "category": "防水保温",
+          "spec": "4mm",
+          "unit": "㎡",
+          "price": 30
+        },
+        {
+          "name": "聚氨酯防水涂料",
+          "category": "防水保温",
+          "spec": "",
+          "unit": "kg",
+          "price": 18
+        },
+        {
+          "name": "挤塑聚苯板 XPS 30mm",
+          "category": "防水保温",
+          "spec": "30mm",
+          "unit": "㎡",
+          "price": 28
+        },
+        {
+          "name": "岩棉板 50mm",
+          "category": "防水保温",
+          "spec": "50mm",
+          "unit": "㎡",
+          "price": 42
+        },
+        {
+          "name": "铝合金平开窗",
+          "category": "门窗",
+          "spec": "",
+          "unit": "㎡",
+          "price": 520
+        },
+        {
+          "name": "塑钢门",
+          "category": "门窗",
+          "spec": "",
+          "unit": "樘",
+          "price": 680
+        },
+        {
+          "name": "实木复合门",
+          "category": "门窗",
+          "spec": "",
+          "unit": "樘",
+          "price": 880
+        },
+        {
+          "name": "防盗门",
+          "category": "门窗",
+          "spec": "",
+          "unit": "樘",
+          "price": 1200
+        },
+        {
+          "name": "木模板 1830×915",
+          "category": "木材板材",
+          "spec": "松木 1830×915×14mm",
+          "unit": "张",
+          "price": 55
+        },
+        {
+          "name": "木方 40×80mm",
+          "category": "木材板材",
+          "spec": "落叶松 40×80mm",
+          "unit": "m",
+          "price": 6.0
+        },
+        {
+          "name": "铁钉",
+          "category": "五金劳保",
+          "spec": "",
+          "unit": "kg",
+          "price": 6.5
+        },
+        {
+          "name": "安全帽",
+          "category": "五金劳保",
+          "spec": "",
+          "unit": "顶",
+          "price": 18
+        },
+        {
+          "name": "瓷砖 800×800",
+          "category": "其他",
+          "spec": "800×800",
+          "unit": "片",
+          "price": 45
+        },
+        {
+          "name": "强化木地板",
+          "category": "其他",
+          "spec": "",
+          "unit": "㎡",
+          "price": 95
+        },
+        {
+          "name": "木板",
+          "category": "木材板材",
+          "spec": "杉木 25mm厚",
+          "unit": "㎡",
+          "price": 75
+        },
+        {
+          "name": "木板",
+          "category": "木材板材",
+          "spec": "松木 20mm厚",
+          "unit": "㎡",
+          "price": 60
+        },
+        {
+          "name": "木板",
+          "category": "木材板材",
+          "spec": "樟子松直拼板 18mm厚",
+          "unit": "㎡",
+          "price": 88
+        },
+        {
+          "name": "胶合板",
+          "category": "木材板材",
+          "spec": "杨木芯 9mm 1220×2440",
+          "unit": "张",
+          "price": 38
+        },
+        {
+          "name": "胶合板",
+          "category": "木材板材",
+          "spec": "桉木芯 12mm 1220×2440",
+          "unit": "张",
+          "price": 55
+        },
+        {
+          "name": "胶合板",
+          "category": "木材板材",
+          "spec": "桉木芯 15mm 1220×2440",
+          "unit": "张",
+          "price": 68
+        },
+        {
+          "name": "细木工板",
+          "category": "木材板材",
+          "spec": "杉木芯 17mm 1220×2440",
+          "unit": "张",
+          "price": 105
+        },
+        {
+          "name": "多层板",
+          "category": "木材板材",
+          "spec": "桉木芯 15mm 1220×2440",
+          "unit": "张",
+          "price": 72
+        },
+        {
+          "name": "中密度纤维板",
+          "category": "木材板材",
+          "spec": "18mm 1220×2440",
+          "unit": "张",
+          "price": 62
+        },
+        {
+          "name": "刨花板",
+          "category": "木材板材",
+          "spec": "16mm 1220×2440",
+          "unit": "张",
+          "price": 48
+        },
+        {
+          "name": "木龙骨",
+          "category": "木材板材",
+          "spec": "落叶松 30×40mm",
+          "unit": "m",
+          "price": 5.5
+        },
+        {
+          "name": "木跳板",
+          "category": "木材板材",
+          "spec": "杉木 200×40mm",
+          "unit": "m",
+          "price": 22
+        }
+      ]
     },
-    {
-      "name": "复合硅酸盐水泥 PO42.5 散装",
-      "category": "水泥及骨料",
-      "spec": "散装",
-      "unit": "吨",
-      "price": 365
-    },
-    {
-      "name": "普通硅酸盐水泥 PO52.5",
-      "category": "水泥及骨料",
-      "spec": "",
-      "unit": "吨",
-      "price": 430
-    },
-    {
-      "name": "中砂（河砂）",
-      "category": "水泥及骨料",
-      "spec": "中砂",
-      "unit": "吨",
-      "price": 135
-    },
-    {
-      "name": "碎石 5-20mm",
-      "category": "水泥及骨料",
-      "spec": "5-20mm",
-      "unit": "吨",
-      "price": 115
-    },
-    {
-      "name": "碎石 20-40mm",
-      "category": "水泥及骨料",
-      "spec": "20-40mm",
-      "unit": "吨",
-      "price": 110
-    },
-    {
-      "name": "商品混凝土 C15",
-      "category": "水泥及骨料",
-      "spec": "C15",
-      "unit": "m³",
-      "price": 380
-    },
-    {
-      "name": "商品混凝土 C30",
-      "category": "水泥及骨料",
-      "spec": "C30",
-      "unit": "m³",
-      "price": 430
-    },
-    {
-      "name": "商品混凝土 C50",
-      "category": "水泥及骨料",
-      "spec": "C50",
-      "unit": "m³",
-      "price": 510
-    },
-    {
-      "name": "螺纹钢 HRB400 Φ12",
-      "category": "钢材",
-      "spec": "Φ12",
-      "unit": "吨",
-      "price": 3920
-    },
-    {
-      "name": "螺纹钢 HRB400 Φ16-25",
-      "category": "钢材",
-      "spec": "Φ16-25",
-      "unit": "吨",
-      "price": 3800
-    },
-    {
-      "name": "盘螺 HRB400 Φ8-10",
-      "category": "钢材",
-      "spec": "Φ8-10",
-      "unit": "吨",
-      "price": 3980
-    },
-    {
-      "name": "高线 HPB300 Φ6.5-10",
-      "category": "钢材",
-      "spec": "Φ6.5-10",
-      "unit": "吨",
-      "price": 3920
-    },
-    {
-      "name": "工字钢 Q235",
-      "category": "钢材",
-      "spec": "",
-      "unit": "吨",
-      "price": 4100
-    },
-    {
-      "name": "角钢 Q235",
-      "category": "钢材",
-      "spec": "",
-      "unit": "吨",
-      "price": 4050
-    },
-    {
-      "name": "烧结普通砖 240×115×53",
-      "category": "砖瓦石材",
-      "spec": "240×115×53",
-      "unit": "千块",
-      "price": 390
-    },
-    {
-      "name": "烧结多孔砖 KP1",
-      "category": "砖瓦石材",
-      "spec": "KP1",
-      "unit": "千块",
-      "price": 460
-    },
-    {
-      "name": "加气混凝土砌块",
-      "category": "砖瓦石材",
-      "spec": "600×200×100",
-      "unit": "m³",
-      "price": 290
-    },
-    {
-      "name": "大理石板材 600×600",
-      "category": "砖瓦石材",
-      "spec": "600×600",
-      "unit": "㎡",
-      "price": 185
-    },
-    {
-      "name": "花岗岩板材 600×600",
-      "category": "砖瓦石材",
-      "spec": "600×600",
-      "unit": "㎡",
-      "price": 225
-    },
-    {
-      "name": "天然砂岩",
-      "category": "砖瓦石材",
-      "spec": "",
-      "unit": "㎡",
-      "price": 160
-    },
-    {
-      "name": "PVC-U 排水管 DN110",
-      "category": "管材管件",
-      "spec": "DN110",
-      "unit": "m",
-      "price": 19
-    },
-    {
-      "name": "PPR 冷水管 DN25",
-      "category": "管材管件",
-      "spec": "DN25",
-      "unit": "m",
-      "price": 7.0
-    },
-    {
-      "name": "PPR 热水管 DN20",
-      "category": "管材管件",
-      "spec": "DN20",
-      "unit": "m",
-      "price": 6.5
-    },
-    {
-      "name": "镀锌钢管 DN100",
-      "category": "管材管件",
-      "spec": "DN100",
-      "unit": "m",
-      "price": 68
-    },
-    {
-      "name": "焊接钢管 DN50",
-      "category": "管材管件",
-      "spec": "DN50",
-      "unit": "m",
-      "price": 32
-    },
-    {
-      "name": "PE 给水管 DN63",
-      "category": "管材管件",
-      "spec": "DN63",
-      "unit": "m",
-      "price": 14
-    },
-    {
-      "name": "铸铁排水管 DN150",
-      "category": "管材管件",
-      "spec": "DN150",
-      "unit": "m",
-      "price": 95
-    },
-    {
-      "name": "铜芯线 BV 2.5mm²",
-      "category": "电线电缆",
-      "spec": "2.5mm²",
-      "unit": "卷(100m)",
-      "price": 230
-    },
-    {
-      "name": "铜芯线 BV 4mm²",
-      "category": "电线电缆",
-      "spec": "4mm²",
-      "unit": "卷(100m)",
-      "price": 360
-    },
-    {
-      "name": "电力电缆 YJV 3×4",
-      "category": "电线电缆",
-      "spec": "3×4",
-      "unit": "m",
-      "price": 23
-    },
-    {
-      "name": "电力电缆 YJV 4×16",
-      "category": "电线电缆",
-      "spec": "4×16",
-      "unit": "m",
-      "price": 78
-    },
-    {
-      "name": "电缆桥架 200×100",
-      "category": "电线电缆",
-      "spec": "200×100",
-      "unit": "m",
-      "price": 55
-    },
-    {
-      "name": "内墙乳胶漆 18L",
-      "category": "涂料化工",
-      "spec": "18L",
-      "unit": "桶",
-      "price": 330
-    },
-    {
-      "name": "外墙真石漆",
-      "category": "涂料化工",
-      "spec": "",
-      "unit": "kg",
-      "price": 9.5
-    },
-    {
-      "name": "腻子粉",
-      "category": "涂料化工",
-      "spec": "20kg",
-      "unit": "袋",
-      "price": 28
-    },
-    {
-      "name": "界面剂",
-      "category": "涂料化工",
-      "spec": "18L",
-      "unit": "桶",
-      "price": 150
-    },
-    {
-      "name": "SBS 防水卷材 4mm",
-      "category": "防水保温",
-      "spec": "4mm",
-      "unit": "㎡",
-      "price": 30
-    },
-    {
-      "name": "聚氨酯防水涂料",
-      "category": "防水保温",
-      "spec": "",
-      "unit": "kg",
-      "price": 18
-    },
-    {
-      "name": "挤塑聚苯板 XPS 30mm",
-      "category": "防水保温",
-      "spec": "30mm",
-      "unit": "㎡",
-      "price": 28
-    },
-    {
-      "name": "岩棉板 50mm",
-      "category": "防水保温",
-      "spec": "50mm",
-      "unit": "㎡",
-      "price": 42
-    },
-    {
-      "name": "铝合金平开窗",
-      "category": "门窗",
-      "spec": "",
-      "unit": "㎡",
-      "price": 520
-    },
-    {
-      "name": "塑钢门",
-      "category": "门窗",
-      "spec": "",
-      "unit": "樘",
-      "price": 680
-    },
-    {
-      "name": "实木复合门",
-      "category": "门窗",
-      "spec": "",
-      "unit": "樘",
-      "price": 880
-    },
-    {
-      "name": "防盗门",
-      "category": "门窗",
-      "spec": "",
-      "unit": "樘",
-      "price": 1200
-    },
-    {
-      "name": "木模板 1830×915",
-      "category": "木材板材",
-      "spec": "松木 1830×915×14mm",
-      "unit": "张",
-      "price": 55
-    },
-    {
-      "name": "木方 40×80mm",
-      "category": "木材板材",
-      "spec": "落叶松 40×80mm",
-      "unit": "m",
-      "price": 6.0
-    },
-    {
-      "name": "铁钉",
-      "category": "五金劳保",
-      "spec": "",
-      "unit": "kg",
-      "price": 6.5
-    },
-    {
-      "name": "安全帽",
-      "category": "五金劳保",
-      "spec": "",
-      "unit": "顶",
-      "price": 18
-    },
-    {
-      "name": "瓷砖 800×800",
-      "category": "其他",
-      "spec": "800×800",
-      "unit": "片",
-      "price": 45
-    },
-    {
-      "name": "强化木地板",
-      "category": "其他",
-      "spec": "",
-      "unit": "㎡",
-      "price": 95
-    },
-    {
-      "name": "木板",
-      "category": "木材板材",
-      "spec": "杉木 25mm厚",
-      "unit": "㎡",
-      "price": 75
-    },
-    {
-      "name": "木板",
-      "category": "木材板材",
-      "spec": "松木 20mm厚",
-      "unit": "㎡",
-      "price": 60
-    },
-    {
-      "name": "木板",
-      "category": "木材板材",
-      "spec": "樟子松直拼板 18mm厚",
-      "unit": "㎡",
-      "price": 88
-    },
-    {
-      "name": "胶合板",
-      "category": "木材板材",
-      "spec": "杨木芯 9mm 1220×2440",
-      "unit": "张",
-      "price": 38
-    },
-    {
-      "name": "胶合板",
-      "category": "木材板材",
-      "spec": "桉木芯 12mm 1220×2440",
-      "unit": "张",
-      "price": 55
-    },
-    {
-      "name": "胶合板",
-      "category": "木材板材",
-      "spec": "桉木芯 15mm 1220×2440",
-      "unit": "张",
-      "price": 68
-    },
-    {
-      "name": "细木工板",
-      "category": "木材板材",
-      "spec": "杉木芯 17mm 1220×2440",
-      "unit": "张",
-      "price": 105
-    },
-    {
-      "name": "多层板",
-      "category": "木材板材",
-      "spec": "桉木芯 15mm 1220×2440",
-      "unit": "张",
-      "price": 72
-    },
-    {
-      "name": "中密度纤维板",
-      "category": "木材板材",
-      "spec": "18mm 1220×2440",
-      "unit": "张",
-      "price": 62
-    },
-    {
-      "name": "刨花板",
-      "category": "木材板材",
-      "spec": "16mm 1220×2440",
-      "unit": "张",
-      "price": 48
-    },
-    {
-      "name": "木龙骨",
-      "category": "木材板材",
-      "spec": "落叶松 30×40mm",
-      "unit": "m",
-      "price": 5.5
-    },
-    {
-      "name": "木跳板",
-      "category": "木材板材",
-      "spec": "杉木 200×40mm",
-      "unit": "m",
-      "price": 22
+    "全国": {
+      "date": "2026-09中旬",
+      "source": "国家统计局·流通领域重要生产资料市场价格（2026-09中旬）",
+      "items": [
+        {
+          "name": "螺纹钢 HRB400 Φ16-25",
+          "category": "钢材",
+          "spec": "Φ16-25",
+          "unit": "吨",
+          "price": 3165.1
+        },
+        {
+          "name": "螺纹钢 HRB400 Φ12",
+          "category": "钢材",
+          "spec": "Φ12",
+          "unit": "吨",
+          "price": 3920
+        },
+        {
+          "name": "高线 HPB300 Φ6.5-10",
+          "category": "钢材",
+          "spec": "Φ6.5-10",
+          "unit": "吨",
+          "price": 3353.7
+        },
+        {
+          "name": "盘螺 HRB400 Φ8-10",
+          "category": "钢材",
+          "spec": "Φ8-10",
+          "unit": "吨",
+          "price": 3980
+        },
+        {
+          "name": "钢板 Q235 20mm",
+          "category": "型材钢板",
+          "spec": "Q235 20mm 中板",
+          "unit": "吨",
+          "price": 3548.0
+        },
+        {
+          "name": "无缝钢管 219×6",
+          "category": "型材钢板",
+          "spec": "20# 219×6mm",
+          "unit": "吨",
+          "price": 4022.4
+        },
+        {
+          "name": "浮法玻璃 5mm",
+          "category": "玻璃制品",
+          "spec": "5mm 白玻",
+          "unit": "㎡",
+          "price": 38
+        },
+        {
+          "name": "复合硅酸盐水泥 PO42.5 袋装",
+          "category": "水泥及骨料",
+          "spec": "袋装",
+          "unit": "吨",
+          "price": 390
+        },
+        {
+          "name": "普通硅酸盐水泥 PO42.5 散装",
+          "category": "水泥及骨料",
+          "spec": "散装",
+          "unit": "吨",
+          "price": 258.8
+        },
+        {
+          "name": "商品混凝土 C30",
+          "category": "水泥及骨料",
+          "spec": "C30",
+          "unit": "m³",
+          "price": 430
+        },
+        {
+          "name": "中砂（河砂）",
+          "category": "水泥及骨料",
+          "spec": "中砂",
+          "unit": "吨",
+          "price": 135
+        },
+        {
+          "name": "碎石 5-20mm",
+          "category": "水泥及骨料",
+          "spec": "5-20mm",
+          "unit": "吨",
+          "price": 115
+        },
+        {
+          "name": "浮法玻璃原片",
+          "category": "玻璃制品",
+          "spec": "5/6mm 吨价",
+          "unit": "吨",
+          "price": 1101.4
+        }
+      ]
     }
-  ],
-  "items_count": 63
+  }
 }
