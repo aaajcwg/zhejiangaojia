@@ -320,15 +320,15 @@
     },
     {
       "name": "木模板 1830×915",
-      "category": "五金劳保",
-      "spec": "1830×915",
+      "category": "木材板材",
+      "spec": "松木 1830×915×14mm",
       "unit": "张",
       "price": 55
     },
     {
       "name": "木方 40×80mm",
-      "category": "五金劳保",
-      "spec": "40×80mm",
+      "category": "木材板材",
+      "spec": "落叶松 40×80mm",
       "unit": "m",
       "price": 6.0
     },
@@ -359,6 +359,91 @@
       "spec": "",
       "unit": "㎡",
       "price": 95
+    },
+    {
+      "name": "木板",
+      "category": "木材板材",
+      "spec": "杉木 25mm厚",
+      "unit": "㎡",
+      "price": 75
+    },
+    {
+      "name": "木板",
+      "category": "木材板材",
+      "spec": "松木 20mm厚",
+      "unit": "㎡",
+      "price": 60
+    },
+    {
+      "name": "木板",
+      "category": "木材板材",
+      "spec": "樟子松直拼板 18mm厚",
+      "unit": "㎡",
+      "price": 88
+    },
+    {
+      "name": "胶合板",
+      "category": "木材板材",
+      "spec": "杨木芯 9mm 1220×2440",
+      "unit": "张",
+      "price": 38
+    },
+    {
+      "name": "胶合板",
+      "category": "木材板材",
+      "spec": "桉木芯 12mm 1220×2440",
+      "unit": "张",
+      "price": 55
+    },
+    {
+      "name": "胶合板",
+      "category": "木材板材",
+      "spec": "桉木芯 15mm 1220×2440",
+      "unit": "张",
+      "price": 68
+    },
+    {
+      "name": "细木工板",
+      "category": "木材板材",
+      "spec": "杉木芯 17mm 1220×2440",
+      "unit": "张",
+      "price": 105
+    },
+    {
+      "name": "多层板",
+      "category": "木材板材",
+      "spec": "桉木芯 15mm 1220×2440",
+      "unit": "张",
+      "price": 72
+    },
+    {
+      "name": "中密度纤维板",
+      "category": "木材板材",
+      "spec": "18mm 1220×2440",
+      "unit": "张",
+      "price": 62
+    },
+    {
+      "name": "刨花板",
+      "category": "木材板材",
+      "spec": "16mm 1220×2440",
+      "unit": "张",
+      "price": 48
+    },
+    {
+      "name": "木龙骨",
+      "category": "木材板材",
+      "spec": "落叶松 30×40mm",
+      "unit": "m",
+      "price": 5.5
+    },
+    {
+      "name": "木跳板",
+      "category": "木材板材",
+      "spec": "杉木 200×40mm",
+      "unit": "m",
+      "price": 22
     }
-  ]
+  ],
+  "items_count": 63
 }
