@@ -26,10 +26,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add prices.json
+          git add prices.json jd_prices.json
           if git diff --cached --quiet; then
             echo "价格无变化，跳过提交"
           else
-            git commit -m "chore: 自动更新全国大宗建材价格（国家统计局）"
+            git commit -m "chore: 自动更新大宗建材价格 + 零售参考价联动（国家统计局）"
             git push
           fi
