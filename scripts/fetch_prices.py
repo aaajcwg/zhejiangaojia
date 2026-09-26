@@ -149,6 +149,51 @@ def main():
 
     prices_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[4] 完成：更新 {updated} 项，新增 {added} 项，期数 {period}")
+
+    # 零售参考价随大宗行情联动：命中材料的新批发价 × 品类零售系数 → 写入 jd_prices.json
+    try:
+        sync_jd_prices(root, idx, nat.get("date", ""))
+    except Exception as e:
+        print("!! 零售价联动失败（不影响主流程）：", repr(e))
+
+
+# 品类零售系数（与前端 JD_CAT_FACTOR 保持一致）
+JD_CAT_FACTOR = {
+    "水泥及骨料": 1.45, "钢材": 1.14, "型材钢板": 1.14, "砖瓦石材": 1.5,
+    "管材管件": 1.35, "阀门水暖": 1.35, "电线电缆": 1.3, "电工电料": 1.4,
+    "涂料化工": 1.35, "防水保温": 1.35, "门窗": 1.3, "木材板材": 1.3,
+    "五金劳保": 1.5, "灯具光源": 1.5, "玻璃制品": 1.4, "泵阀消防": 1.3,
+    "紧固焊材": 1.5, "周转材料": 1.35, "砂浆外加剂": 1.3, "其他": 1.35,
+}
+
+
+def sync_jd_prices(root, idx, period):
+    """用最新批发价 × 品类零售系数，更新 jd_prices.json 中对应的零售参考价。"""
+    jd_path = root / "jd_prices.json"
+    if not jd_path.exists():
+        print("    jd_prices.json 不存在，跳过零售价联动")
+        return
+    jd = json.loads(jd_path.read_text(encoding="utf-8"))
+    prices = jd.setdefault("prices", {})
+    hit = 0
+    for key, item in idx.items():
+        if key not in prices:
+            continue
+        wholesale = item.get("price")
+        cat = item.get("category", "其他")
+        factor = JD_CAT_FACTOR.get(cat, 1.35)
+        try:
+            new_val = round(float(wholesale) * factor, 2)
+        except (TypeError, ValueError):
+            continue
+        if abs(new_val - float(prices[key])) > 0.01:
+            prices[key] = new_val
+            hit += 1
+    if hit:
+        jd["updated"] = date.today().isoformat()
+        jd["source"] = f"京东口径零售参考价（随国家统计局 {period} 批发价联动重算 {hit} 项；其余为整理值）"
+        jd_path.write_text(json.dumps(jd, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"    零售参考价联动：更新 {hit} 项")
     print("    期数时间戳:", datetime.now().isoformat(timespec="seconds"))
 
 
