@@ -1106,17 +1106,20 @@ function openDetail(id){
   document.getElementById('detTitle').textContent=m.name;
   document.getElementById('detCat').textContent=m.category;
   document.getElementById('detSpec').textContent=(m.spec||'—')+' / '+(m.unit||'—');
-  const mulTag = settings.priceMode==='retail' ? '（零售口径 ×'+settings.retailFactor+'）' : '（工程批发口径）';
-  document.getElementById('detBase').textContent=fmt(effPrice(m.price))+' 元/'+(m.unit||'')+' '+mulTag;
+  const isRetail = settings.priceMode==='retail';
+  const baseTag = isRetail ? '（零售口径 ×'+settings.retailFactor+'）' : '（工程批发口径）';
+  const baseAlt = isRetail ? '批发价：'+fmt(m.price)+' 元' : '零售参考：'+fmt(m.price*settings.retailFactor)+' 元';
+  document.getElementById('detBase').innerHTML=fmt(effPrice(m.price))+' 元/'+(m.unit||'')+' <span class="det-brand">'+baseTag+'</span><br><span class="det-brand">'+baseAlt+'</span>';
   const bs=brandsOf(m), box=document.getElementById('detBrands');
   if(!bs.length){
     box.innerHTML='<div class="empty" style="padding:10px;">该材料暂无品牌价格，点“编辑此材料”可添加</div>';
   } else {
-    let h='<div class="det-row" style="padding:6px 2px;"><span class="det-brand">品牌价格（'+bs.length+' 家）'+mulTag+'</span></div>';
+    let h='<div class="det-row" style="padding:6px 2px;"><span class="det-brand">品牌价格（'+bs.length+' 家）'+baseTag+'</span></div>';
     bs.forEach(b=>{
       const d=effPrice(b[1])-effPrice(m.price);
       const dtxt=(Math.abs(d)<0.01?'与基准持平':(d>0?'+':'−')+fmt(Math.abs(d))+' 元');
-      h+='<div class="det-row"><span>'+esc(b[0])+'</span><span class="num"><span class="det-price">'+fmt(effPrice(b[1]))+'</span> <span class="det-brand">元</span><br><span class="det-brand">'+dtxt+'</span></span></div>';
+      const alt=(isRetail?'批发价：'+fmt(b[1])+' 元':'零售参考：'+fmt(b[1]*settings.retailFactor)+' 元')+' · '+dtxt;
+      h+='<div class="det-row"><span>'+esc(b[0])+'</span><span class="num"><span class="det-price">'+fmt(effPrice(b[1]))+'</span> <span class="det-brand">元</span><br><span class="det-brand">'+alt+'</span></span></div>';
     });
     box.innerHTML=h;
   }
