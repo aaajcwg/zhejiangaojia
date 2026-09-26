@@ -907,6 +907,12 @@ function load(k,def){ try{ const v=localStorage.getItem(k); return v?JSON.parse(
 function save(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
 
 let materials = load(LS.mat, defaultMaterials());
+/* 旧缓存材料自动补品牌（老版本 localStorage 数据无 brand 字段，按"名称|规格"匹配内置品牌库） */
+materials.forEach(m=>{
+  if(Array.isArray(m.brand)&&m.brand.length) return;
+  const bk=m.name+'|'+(m.spec||'');
+  if(BRAND_PRICES[bk]) m.brand=BRAND_PRICES[bk];
+});
 let quotes = load(LS.quote, []);
 let settings = load(LS.set, {
   company:"", contact:"", phone:"", address:"",
