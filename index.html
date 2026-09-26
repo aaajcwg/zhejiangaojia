@@ -344,6 +344,7 @@
         <div><label>默认运费(元)</label><input id="s_freight" type="number" step="1" min="0" inputmode="numeric"></div>
         <div><label>默认损耗 %</label><input id="s_loss" type="number" step="0.1" min="0" inputmode="decimal"></div>
         <div><label>价格口径</label><select id="s_priceMode"><option value="wholesale">工程批发价</option><option value="retail">零售价（含配送/渠道）</option></select></div>
+        <div><label>零售价来源</label><select id="s_retailSource"><option value="jd">京东参考价（内置表，可单项改）</option><option value="factor">统一系数（工程价 × 系数）</option></select></div>
         <div><label>零售系数 ×</label><input id="s_retailFactor" type="number" step="0.01" min="1" max="3" inputmode="decimal"></div>
       </div>
       <p class="hint" id="priceModeHint" style="margin:8px 0 0;"></p>
@@ -416,6 +417,7 @@
       <div><label>规格</label><input id="mat_spec"></div>
       <div><label>单位 *</label><input id="mat_unit" placeholder="吨/米/㎡/桶…"></div>
       <div><label>基准单价(元) *</label><input id="mat_price" type="number" step="0.01" min="0" inputmode="decimal"></div>
+      <div><label>京东零售价（可改，元/单位）</label><input id="mat_retail" type="number" step="0.01" min="0" inputmode="decimal" placeholder="留空用内置表"></div>
       <div style="grid-column:1/-1;"><label>品牌价格（可选）格式：品牌=价格,品牌=价格</label><input id="mat_brand" placeholder="例：海螺水泥=402,华润水泥=396"></div>
     </div>
     <div class="row-actions">
@@ -888,6 +890,232 @@ function defaultMaterials(){
     return {id:"m"+(i+1),name:r[0],category:r[1],spec:r[2],unit:r[3],price:r[4],brand:b||null};
   });
 }
+/* ============ 京东零售参考价（2026-09 整理，非实时抓取） ============ */
+const JD_RETAIL = {
+  "复合硅酸盐水泥 PO42.5 袋装|袋装":580,
+  "复合硅酸盐水泥 PO42.5 散装|散装":500,
+  "普通硅酸盐水泥 PO52.5|":640,
+  "普通硅酸盐水泥 PO42.5 散装|散装":520,
+  "中砂（河砂）|中砂":260,
+  "碎石 5-20mm|5-20mm":190,
+  "碎石 20-40mm|20-40mm":180,
+  "商品混凝土 C15|C15":480,
+  "商品混凝土 C30|C30":540,
+  "商品混凝土 C50|C50":620,
+  "螺纹钢 HRB400 Φ12|Φ12":4450,
+  "螺纹钢 HRB400 Φ16-25|Φ16-25":4320,
+  "盘螺 HRB400 Φ8-10|Φ8-10":4520,
+  "高线 HPB300 Φ6.5-10|Φ6.5-10":4450,
+  "工字钢 Q235|":4680,
+  "角钢 Q235|":4620,
+  "烧结普通砖 240×115×53|240×115×53":620,
+  "烧结多孔砖 KP1|KP1":720,
+  "加气混凝土砌块|600×200×100":380,
+  "大理石板材 600×600|600×600":285,
+  "花岗岩板材 600×600|600×600":330,
+  "PVC-U 排水管 DN110|DN110":26,
+  "PPR 冷水管 DN25|DN25":9.8,
+  "PPR 热水管 DN20|DN20":9.2,
+  "镀锌钢管 DN100|DN100":92,
+  "焊接钢管 DN50|DN50":43,
+  "PE 给水管 DN63|DN63":19.5,
+  "铸铁排水管 DN150|DN150":128,
+  "铜芯线 BV 2.5mm²|2.5mm²":305,
+  "铜芯线 BV 4mm²|4mm²":465,
+  "铜芯线 BV 6mm²|6mm²":660,
+  "电力电缆 YJV 3×4|3×4":30,
+  "电力电缆 YJV 4×16|4×16":102,
+  "电力电缆 YJV 5×6|5×6":47,
+  "电力电缆 YJV 4×35+1×16|4×35+1×16":215,
+  "电缆桥架 200×100|200×100":72,
+  "内墙乳胶漆 18L|18L":455,
+  "外墙真石漆|":13,
+  "腻子粉|20kg":38,
+  "界面剂|18L":195,
+  "环氧富锌底漆|双组份 锌含量60%":43,
+  "醇酸调和漆|铁红/灰色":22,
+  "红丹防锈漆|酚醛":21,
+  "外墙弹性涂料|丙烯酸 弹性":30,
+  "氟碳漆|双组份 金属面":88,
+  "环氧地坪漆|溶剂型 面涂":34,
+  "SBS 防水卷材 4mm|4mm":41,
+  "聚氨酯防水涂料|":25,
+  "聚合物水泥防水涂料|JS II型":22,
+  "挤塑聚苯板 XPS 30mm|30mm":37,
+  "挤塑聚苯板 XPS 50mm|50mm B1级":58,
+  "岩棉板 50mm|50mm":56,
+  "无机保温砂浆|A型 35kg":46,
+  "泡沫混凝土|B06 现浇":360,
+  "橡塑保温板|B1级 25mm":72,
+  "铝合金平开窗|":660,
+  "塑钢门|":880,
+  "实木复合门|":1150,
+  "防盗门|":1580,
+  "断桥铝窗|55系列 中空玻璃":890,
+  "断桥铝窗|70系列 三玻两腔":1100,
+  "铝合金推拉窗|80系列 单玻":500,
+  "电动卷帘门|彩钢 0.5mm":340,
+  "钢质防火门|甲级 含五金":680,
+  "塑钢窗|60系列 中空":420,
+  "木模板 1830×915|松木 1830×915×14mm":72,
+  "木方 40×80mm|落叶松 40×80mm":8,
+  "木板|杉木 25mm厚":98,
+  "木板|松木 20mm厚":78,
+  "木板|樟子松直拼板 18mm厚":115,
+  "胶合板|杨木芯 9mm 1220×2440":50,
+  "胶合板|桉木芯 12mm 1220×2440":72,
+  "胶合板|桉木芯 15mm 1220×2440":88,
+  "细木工板|杉木芯 17mm 1220×2440":138,
+  "多层板|桉木芯 15mm 1220×2440":94,
+  "中密度纤维板|18mm 1220×2440":82,
+  "刨花板|16mm 1220×2440":63,
+  "木龙骨|落叶松 30×40mm":7.5,
+  "木跳板|杉木 200×40mm":30,
+  "铁钉|":9.5,
+  "安全帽|":26,
+  "瓷砖 800×800|800×800":62,
+  "强化木地板|":128,
+  "砌筑砂浆 M10 预拌|M10":480,
+  "抹灰砂浆 M15 预拌|M15":495,
+  "干混砂浆 M10|M10 散装":420,
+  "石膏砂浆|机制喷抹":530,
+  "白水泥 425#|425#":1.9,
+  "减水剂 聚羧酸|液体 含固10%":3100,
+  "膨胀剂|UEA":2850,
+  "钢板 Q235 20mm|Q235 20mm 中板":4780,
+  "无缝钢管 219×6|20# 219×6mm":5650,
+  "方管|Q235 40×40×2.5 6m":63,
+  "方管|Q235 60×60×3.0 6m":112,
+  "矩形管|Q235 80×40×3.0 6m":122,
+  "H型钢|Q235 200×100":4720,
+  "H型钢|Q345 300×150":4880,
+  "C型钢|Q235 160×60×20 檩条":37,
+  "圆钢|45# Φ25":4950,
+  "扁钢|Q235 40×4":13,
+  "花纹钢板|Q235 3mm":4950,
+  "镀锌钢板|DX51D 0.5mm":35,
+  "槽钢|Q235 10#":55,
+  "等边角钢|Q235 50×5":32,
+  "钢筋网片|冷轧 Φ6.5 200×200":42,
+  "冷轧带肋钢筋|CRB550":4700,
+  "页岩多孔砖|KP1 240×115×90":760,
+  "混凝土标砖|240×115×53":640,
+  "蒸压加气块|B06 600×200×200":355,
+  "仿石砖|300×150 芝麻灰":88,
+  "透水砖|200×100×60":105,
+  "广场砖|300×300":75,
+  "PVC-U 排水管 DN160|DN160 环刚8":62,
+  "PVC-U 排水管件弯头|DN110 90°":11.5,
+  "PE 给水管|PE100 dn110 1.0MPa":58,
+  "不锈钢波纹管|DN15 编织软管":17,
+  "铝塑复合管|1216":7.8,
+  "闸阀|Z45X-16 暗杆 DN50":128,
+  "闸阀|Z45X-16 暗杆 DN100":280,
+  "截止阀|J11W-16 DN50":118,
+  "球阀|Q11F-16 内丝 DN25":34,
+  "球阀|Q41F-16 法兰 DN50":92,
+  "止回阀|H44X-16 对夹 DN100":245,
+  "蝶阀|D371X-16 对夹 DN150":420,
+  "减压阀|Y110 比例式 DN50":345,
+  "浮球阀|DN50 铜体":100,
+  "水表|旋翼湿式 DN25":88,
+  "水表|旋翼湿式 DN50":215,
+  "PPR 内丝弯头|DN25 热熔":9,
+  "PPR 三通|DN25 热熔":8,
+  "铜闸阀|DN15 内丝":65,
+  "地漏|DN50 304不锈钢":38,
+  "存水弯|PVC-U DN50":13,
+  "角阀|4分 铜体":21,
+  "编织软管|4分 300mm":12,
+  "生料带|宽20m":4,
+  "微型断路器|DZ47-63 C32 1P":38,
+  "漏电保护器|DZ47LE-32 C32 30mA":88,
+  "配电箱|明装 12回路 位":128,
+  "墙壁开关|86型 单联单控":17,
+  "五孔插座|86型 10A":21,
+  "PVC 线管|Φ16 中型":2.6,
+  "PVC 线管|Φ20 中型":3.2,
+  "镀锌线管|JDG Φ20 1.2mm":7.5,
+  "桥架弯头|热镀锌 200×100 90°":30,
+  "弱电箱|300×400 暗装":105,
+  "网线|超五类非屏蔽 305m":375,
+  "光纤皮线|单芯 G657A":1.8,
+  "接线盒|86型 PVC":2.4,
+  "LED 灯管|T8 1.2m 18W":22,
+  "LED 面板灯|600×600 36W":92,
+  "LED 筒灯|3寸 8W":31,
+  "LED 投光灯|100W IP65":118,
+  "LED 灯带|2835 60珠/m":6.5,
+  "LED 工矿灯|100W":175,
+  "应急照明灯|双头 消防":62,
+  "浮法玻璃 5mm|5mm 白玻":52,
+  "浮法玻璃 8mm|8mm 白玻":75,
+  "钢化玻璃|8mm":128,
+  "钢化玻璃|10mm":158,
+  "中空玻璃|5+9A+5":180,
+  "夹胶玻璃|5+0.76PVB+5":220,
+  "镀膜玻璃|6mm Low-E":118,
+  "潜水泵|QDX10-38 0.75kW":520,
+  "管道离心泵|ISW65-160":1300,
+  "消火栓箱|800×650 明装":630,
+  "室内消火栓|SN65 单出口":195,
+  "灭火器|MFZ/ABC4 干粉":75,
+  "灭火器|MFZ/ABC8 干粉":128,
+  "喷淋头|ZSTX-15 68℃下垂":17,
+  "湿式报警阀|ZSFZ DN100":1650,
+  "消防水带|8型-65-25 衬胶":135,
+  "膨胀螺栓|M10×100 镀锌":1.8,
+  "化学锚栓|M12×160":12,
+  "六角螺栓|M12×40 4.8级":1.2,
+  "自攻钉|M4×30 十字 盒装":26,
+  "焊条|J422 Φ3.2":9.5,
+  "焊条|J507 Φ4.0 低氢":12,
+  "绑扎钢丝|22# 镀锌":9,
+  "钢管脚手架|Φ48×3.0 6m Q235":92,
+  "扣件|十字直角 铸铁":9,
+  "扣件|对接/旋转 铸铁":9.8,
+  "钢跳板|250×2500 3mm":105,
+  "密目安全网|6×1.8m 阻燃":35,
+  "安全带|全身五点式":92,
+  "轮扣立杆|Φ48 2.4m Q345":128
+};
+/* 无明确京东价时按品类零售系数兜底 */
+const JD_CAT_FACTOR = {
+  "水泥及骨料":1.45,
+  "钢材":1.14,
+  "型材钢板":1.14,
+  "砖瓦石材":1.5,
+  "管材管件":1.35,
+  "阀门水暖":1.35,
+  "电线电缆":1.3,
+  "电工电料":1.4,
+  "涂料化工":1.35,
+  "防水保温":1.35,
+  "门窗":1.3,
+  "木材板材":1.3,
+  "五金劳保":1.5,
+  "灯具光源":1.5,
+  "玻璃制品":1.4,
+  "泵阀消防":1.3,
+  "紧固焊材":1.5,
+  "周转材料":1.35,
+  "砂浆外加剂":1.3,
+  "其他":1.35
+};
+function jdRetail(m){
+  if(!m) return 0;
+  if(m.retail) return Number(m.retail)||0;
+  const k=(m.name||"")+"|"+(m.spec||"");
+  if(JD_RETAIL[k]!==undefined) return JD_RETAIL[k];
+  return +(Number(m.price)*(JD_CAT_FACTOR[m.category]||1.35)).toFixed(2);
+}
+/* 零售口径下某价格（基准价或品牌价）对应的京东参考价：按品牌溢价比例折算 */
+function retailValue(m, v){
+  const base=Number(m&&m.price)||0;
+  const jd=jdRetail(m);
+  if(!base||!jd) return +(Number(v)*priceMul()).toFixed(2);
+  return +(jd*(Number(v)/base)).toFixed(2);
+}
 /* ============ 品牌选中与取价 ============ */
 function esc(s){
   return String(s==null?"":s).replace(/[&<>]/g,function(c){ return c==="&"?"&amp;":(c==="<"?"&lt;":"&gt;"); });
@@ -922,7 +1150,7 @@ let settings = load(LS.set, {
   tax:9, freight:0, loss:2,
   cityFactors:DEFAULT_CITY, baseCity:"杭州",
   dataUrl:"./prices.json", useProxy:false,
-  priceMode:"wholesale", retailFactor:1.35
+  priceMode:"wholesale", retailFactor:1.35, retailSource:"jd"
 });
 if(!settings.baseCity) settings.baseCity="杭州";
 if(!settings.cityFactors) settings.cityFactors=DEFAULT_CITY;
@@ -931,10 +1159,15 @@ if(!settings.dataUrl) settings.dataUrl="./prices.json";
 if(settings.useProxy===undefined) settings.useProxy=false;
 if(!settings.priceMode) settings.priceMode="wholesale";
 if(!settings.retailFactor) settings.retailFactor=1.35;
+if(!settings.retailSource) settings.retailSource="jd";
 
 /* 价格口径：工程批发价=1；零售价=×零售系数（含运费/渠道/小批量溢价） */
 function priceMul(){ return settings.priceMode==='retail' ? (parseFloat(settings.retailFactor)||1) : 1; }
-function effPrice(v){ return +(Number(v)*priceMul()).toFixed(2); }
+function effPrice(v, m){
+  if(settings.priceMode!=="retail") return +Number(v).toFixed(2);
+  if(settings.retailSource==="jd" && m) return retailValue(m, v);
+  return +(Number(v)*priceMul()).toFixed(2);
+}
 function repriceQuote(){
   if(!currentQuote||!currentQuote.items) return;
   const f=cityFactor(document.getElementById('q_city').value);
@@ -942,7 +1175,7 @@ function repriceQuote(){
     if(!it.materialId) return;
     const m=materials.find(x=>x.id===it.materialId); if(!m) return;
     if(it.brand) setBrandPick(m.id,it.brand);
-    it.price=+(matPrice(m)*f*priceMul()).toFixed(2); recalcRow(i);
+    it.price=+(effPrice(matPrice(m),m)*f).toFixed(2); recalcRow(i);
   });
   renderQuoteBody(); calcTotals();
 }
@@ -1044,9 +1277,12 @@ function initCraft(){
 /* ============ 设置页渲染 ============ */
 function updatePriceModeHint(){
   const el=document.getElementById('priceModeHint'); if(!el) return;
+  const src = (settings.retailSource==='jd')
+    ? '零售价来源：内置京东参考价表（186 项材料，按京东/天猫官方店铺零售口径整理，2026-09）；单个材料可在“编辑材料”里改。'
+    : '零售价来源：统一系数（工程价 × '+settings.retailFactor+'）。';
   el.textContent = settings.priceMode==='retail'
-    ? '当前：零售价口径（工程价 × '+settings.retailFactor+'），适合小批量、含配送上楼的散户报价。'
-    : '当前：工程批发价口径（整车/大批量、不含配送），零售价请在口径里切换并调整系数。';
+    ? '当前：零售价口径——'+src
+    : '当前：工程批发价口径（整车/大批量、不含配送）。零售口径：'+src;
 }
 function renderSettings(){
   document.getElementById('s_company').value=settings.company||'';
@@ -1060,9 +1296,11 @@ function renderSettings(){
   document.getElementById('s_proxy').checked=!!settings.useProxy;
   document.getElementById('s_priceMode').value=settings.priceMode||'wholesale';
   document.getElementById('s_retailFactor').value=settings.retailFactor||1.35;
+  document.getElementById('s_retailSource').value=settings.retailSource||'jd';
   updatePriceModeHint();
   document.getElementById('s_priceMode').onchange=()=>{ settings.priceMode=document.getElementById('s_priceMode').value; persist(); updatePriceModeHint(); renderMaterials(); repriceQuote(); };
   document.getElementById('s_retailFactor').onchange=()=>{ const v=parseFloat(document.getElementById('s_retailFactor').value); settings.retailFactor=(v&&v>=1)?v:1.35; persist(); updatePriceModeHint(); renderMaterials(); repriceQuote(); };
+  document.getElementById('s_retailSource').onchange=()=>{ settings.retailSource=document.getElementById('s_retailSource').value; persist(); updatePriceModeHint(); renderMaterials(); repriceQuote(); };
   const cf=document.getElementById('cityFactors'); cf.innerHTML='';
   Object.keys(settings.cityFactors).forEach(c=>{
     const d=document.createElement('div');
@@ -1107,19 +1345,21 @@ function openDetail(id){
   document.getElementById('detCat').textContent=m.category;
   document.getElementById('detSpec').textContent=(m.spec||'—')+' / '+(m.unit||'—');
   const isRetail = settings.priceMode==='retail';
-  const baseTag = isRetail ? '（零售口径 ×'+settings.retailFactor+'）' : '（工程批发口径）';
-  const baseAlt = isRetail ? '批发价：'+fmt(m.price)+' 元' : '零售参考：'+fmt(m.price*settings.retailFactor)+' 元';
-  document.getElementById('detBase').innerHTML=fmt(effPrice(m.price))+' 元/'+(m.unit||'')+' <span class="det-brand">'+baseTag+'</span><br><span class="det-brand">'+baseAlt+'</span>';
+  const useJd = settings.retailSource==='jd';
+  const altLabel = useJd ? '京东参考价' : '零售参考';
+  const baseTag = isRetail ? (useJd?'（京东零售口径）':'（零售口径 ×'+settings.retailFactor+'）') : '（工程批发口径）';
+  const baseAlt = isRetail ? '批发价：'+fmt(m.price)+' 元' : altLabel+'：'+fmt(useJd?jdRetail(m):m.price*settings.retailFactor)+' 元';
+  document.getElementById('detBase').innerHTML=fmt(effPrice(m.price,m))+' 元/'+(m.unit||'')+' <span class="det-brand">'+baseTag+'</span><br><span class="det-brand">'+baseAlt+'</span>';
   const bs=brandsOf(m), box=document.getElementById('detBrands');
   if(!bs.length){
     box.innerHTML='<div class="empty" style="padding:10px;">该材料暂无品牌价格，点“编辑此材料”可添加</div>';
   } else {
     let h='<div class="det-row" style="padding:6px 2px;"><span class="det-brand">品牌价格（'+bs.length+' 家）'+baseTag+'</span></div>';
     bs.forEach(b=>{
-      const d=effPrice(b[1])-effPrice(m.price);
+      const d=effPrice(b[1],m)-effPrice(m.price,m);
       const dtxt=(Math.abs(d)<0.01?'与基准持平':(d>0?'+':'−')+fmt(Math.abs(d))+' 元');
-      const alt=(isRetail?'批发价：'+fmt(b[1])+' 元':'零售参考：'+fmt(b[1]*settings.retailFactor)+' 元')+' · '+dtxt;
-      h+='<div class="det-row"><span>'+esc(b[0])+'</span><span class="num"><span class="det-price">'+fmt(effPrice(b[1]))+'</span> <span class="det-brand">元</span><br><span class="det-brand">'+alt+'</span></span></div>';
+      const alt=(isRetail?'批发价：'+fmt(b[1])+' 元':altLabel+'：'+fmt(useJd?retailValue(m,b[1]):b[1]*settings.retailFactor)+' 元')+' · '+dtxt;
+      h+='<div class="det-row"><span>'+esc(b[0])+'</span><span class="num"><span class="det-price">'+fmt(effPrice(b[1],m))+'</span> <span class="det-brand">元</span><br><span class="det-brand">'+alt+'</span></span></div>';
     });
     box.innerHTML=h;
   }
@@ -1151,11 +1391,11 @@ function renderMaterials(){
     let brandCell='<td class="hint">—</td>';
     if(bs.length){
       let opts='<option value="">通用基准价</option>';
-      bs.forEach(b=>{ opts+='<option value="'+b[0]+'"'+(cur===b[0]?' selected':'')+'>'+b[0]+'（'+fmt(effPrice(b[1]))+'元）</option>'; });
+      bs.forEach(b=>{ opts+='<option value="'+b[0]+'"'+(cur===b[0]?' selected':'')+'>'+b[0]+'（'+fmt(effPrice(b[1],m))+'元）</option>'; });
       brandCell='<td><select class="bsel" data-b="'+m.id+'">'+opts+'</select></td>';
     }
     const tr=document.createElement('tr');
-    const price=effPrice(matPrice(m));
+    const price=effPrice(matPrice(m),m);
     tr.innerHTML='<td><span class="mlink" data-detail="'+m.id+'">'+esc(m.name)+'</span></td><td><span class="tag">'+esc(m.category)+'</span></td><td>'+esc(m.spec||'—')+'</td>'
       +brandCell+'<td>'+esc(m.unit)+'</td><td class="num">'+fmt(price)+'</td>'
       +'<td class="no-print"><button class="btn ghost sm" data-edit="'+m.id+'">编辑</button> <button class="btn danger sm" data-del="'+m.id+'">删</button></td>';
@@ -1185,6 +1425,7 @@ function openMatModal(id){
     document.getElementById('mat_spec').value=m.spec||'';
     document.getElementById('mat_unit').value=m.unit;
     document.getElementById('mat_price').value=m.price;
+    document.getElementById('mat_retail').value=m.retail||(JD_RETAIL[(m.name||'')+'|'+(m.spec||'')]!==undefined?JD_RETAIL[(m.name||'')+'|'+(m.spec||'')]:'');
     document.getElementById('mat_brand').value=(Array.isArray(m.brand)&&m.brand.length)? m.brand.map(b=>b[0]+'='+b[1]).join(',') : '';
   } else {
     document.getElementById('matModalTitle').textContent='新增材料';
@@ -1194,6 +1435,7 @@ function openMatModal(id){
     document.getElementById('mat_spec').value='';
     document.getElementById('mat_unit').value='';
     document.getElementById('mat_price').value='';
+    document.getElementById('mat_retail').value='';
     document.getElementById('mat_brand').value='';
   }
   modal.classList.add('show');
@@ -1209,6 +1451,8 @@ document.getElementById('matSave').onclick=()=>{
   if(!name||!cat||!unit||isNaN(price)){ alert('请完整填写名称、分类、单位和单价'); return; }
   const id=document.getElementById('mat_id').value;
   const data={name,spec:document.getElementById('mat_spec').value.trim(),category:cat,unit,price};
+  const rv=parseFloat(document.getElementById('mat_retail').value);
+  data.retail=isNaN(rv)?null:rv;
   const btxt=document.getElementById('mat_brand').value.trim();
   data.brand=btxt? btxt.split(/[,，]/).map(s=>s.trim()).filter(Boolean).map(s=>{ const i=s.lastIndexOf('='); if(i<0) return null; const n=parseFloat(s.slice(i+1)); if(isNaN(n)) return null; return [s.slice(0,i), n]; }).filter(Boolean) : null;
   if(id){ const old=materials.find(x=>x.id===id); if(old && Array.isArray(old.brand) && old.brand.length && !data.brand){ data.brand=old.brand; } }
@@ -1589,13 +1833,13 @@ function renderPick(){
     let brandCell='<td class="hint">—</td>';
     if(bs.length){
       let opts='';
-      bs.forEach(b=>{ opts+='<option value="'+b[0]+'"'+(cur===b[0]?' selected':'')+'>'+b[0]+'（'+fmt(effPrice(b[1]))+'）</option>'; });
+      bs.forEach(b=>{ opts+='<option value="'+b[0]+'"'+(cur===b[0]?' selected':'')+'>'+b[0]+'（'+fmt(effPrice(b[1],m))+'）</option>'; });
       brandCell='<td><select class="psel" data-p="'+m.id+'">'+opts+'</select></td>';
     }
     const tr=document.createElement('tr'); tr.className='pick-row';
     tr.innerHTML='<td><span class="mlink" data-detail="'+m.id+'">'+esc(m.name)+'</span></td><td><span class="tag">'+esc(m.category)+'</span></td><td>'+esc(m.spec||'—')+'</td>'
-      +brandCell+'<td>'+esc(m.unit)+'</td><td class="num">'+fmt(effPrice(pickPrice(m,cur)))+'</td><td><button class="btn sm">选</button></td>';
-    const showPrice=()=>{ const c=tr.querySelector('td.num'); if(c) c.textContent=fmt(effPrice(pickPrice(m,cur))); };
+      +brandCell+'<td>'+esc(m.unit)+'</td><td class="num">'+fmt(effPrice(pickPrice(m,cur),m))+'</td><td><button class="btn sm">选</button></td>';
+    const showPrice=()=>{ const c=tr.querySelector('td.num'); if(c) c.textContent=fmt(effPrice(pickPrice(m,cur),m)); };
     tr.querySelectorAll('.psel').forEach(s=>{
       s.onclick=e=>e.stopPropagation();
       s.onchange=()=>{ cur=s.value; showPrice(); };
@@ -1608,7 +1852,7 @@ function renderPick(){
       const i=pickRowIndex;
       if(!currentQuote) currentQuote={items:[]};
       while(currentQuote.items.length<=i) currentQuote.items.push({name:'',spec:'',unit:'',price:0,qty:0,loss:settings.loss,subtotal:0});
-      currentQuote.items[i]={materialId:m.id,name:m.name,spec:m.spec,unit:m.unit,brand:cur||'',price:+(pickPrice(m,cur)*f*priceMul()).toFixed(2),qty:currentQuote.items[i].qty||1,loss:currentQuote.items[i].loss||settings.loss,subtotal:0};
+      currentQuote.items[i]={materialId:m.id,name:m.name,spec:m.spec,unit:m.unit,brand:cur||'',price:+(effPrice(pickPrice(m,cur),m)*f).toFixed(2),qty:currentQuote.items[i].qty||1,loss:currentQuote.items[i].loss||settings.loss,subtotal:0};
       recalcRow(i); renderQuoteBody(); calcTotals();
       document.getElementById('pickBg').classList.remove('show');
     };
