@@ -76,6 +76,14 @@
   tr:hover td{background:#fafcff;}
   .num{text-align:right;font-variant-numeric:tabular-nums;}
   .tag{display:inline-block;background:#eef3fb;color:var(--primary);padding:2px 8px;border-radius:20px;font-size:12px;}
+  .mlink{color:var(--primary);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--primary);text-decoration:none;}
+  .mlink:active{opacity:.6;}
+  .det-brand{font-size:13px;color:var(--muted);}
+  .det-price{font-size:20px;font-weight:700;color:var(--primary-dark);font-variant-numeric:tabular-nums;}
+  .det-row{display:flex;justify-content:space-between;align-items:center;padding:10px 2px;border-bottom:1px solid #eef2f7;}
+  .det-row:last-child{border-bottom:none;}
+  .det-badge{display:inline-block;background:#fff7e8;color:#b45309;border:1px solid #fde2ad;font-size:11px;padding:1px 7px;border-radius:20px;margin-left:6px;}
+  .det-badge.on{background:#ecfdf3;color:#047857;border-color:#bbe7cc;}
   .totals{display:flex;justify-content:flex-end;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:14px;}
   .totals .item{text-align:right;}
   .totals .item .v{font-size:18px;font-weight:700;color:var(--primary-dark);}
@@ -410,6 +418,22 @@
     <div class="row-actions">
       <button class="btn block" id="matSave">保存</button>
       <button class="btn ghost block" id="matCancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 材料价格详情弹窗 -->
+<div class="modal-bg" id="detBg">
+  <div class="modal">
+    <button class="close-x" id="detClose">&times;</button>
+    <h3 id="detTitle">价格详情</h3>
+    <div class="det-row"><span class="det-brand">分类</span><span><span class="tag" id="detCat"></span></span></div>
+    <div class="det-row"><span class="det-brand">规格 / 单位</span><span id="detSpec" style="color:var(--ink);"></span></div>
+    <div class="det-row"><span class="det-brand">基准单价</span><span class="det-price" id="detBase"></span></div>
+    <div id="detBrands"></div>
+    <div class="row-actions">
+      <button class="btn block" id="detEdit">编辑此材料</button>
+      <button class="btn ghost block" id="detCancel">关闭</button>
     </div>
   </div>
 </div>
@@ -967,6 +991,34 @@ function fillCatSelect(el, withAll){
   CATS.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; el.appendChild(o); });
   if([...el.options].some(o=>o.value===prev)) el.value=prev;
 }
+/* ============ 价格详情弹窗 ============ */
+let detId=null;
+function openDetail(id){
+  const m=materials.find(x=>x.id===id); if(!m) return;
+  detId=id;
+  document.getElementById('detTitle').textContent=m.name;
+  document.getElementById('detCat').textContent=m.category;
+  document.getElementById('detSpec').textContent=(m.spec||'—')+' / '+(m.unit||'—');
+  document.getElementById('detBase').textContent=fmt(m.price)+' 元/'+(m.unit||'');
+  const bs=brandsOf(m), box=document.getElementById('detBrands');
+  if(!bs.length){
+    box.innerHTML='<div class="empty" style="padding:10px;">该材料暂无品牌价格，点“编辑此材料”可添加</div>';
+  } else {
+    let h='<div class="det-row" style="padding:6px 2px;"><span class="det-brand">品牌价格（'+bs.length+' 家）</span></div>';
+    bs.forEach(b=>{
+      const d=+b[1]-Number(m.price);
+      const dtxt=(d===0?'与基准持平':(d>0?'+':'−')+fmt(Math.abs(d))+' 元');
+      h+='<div class="det-row"><span>'+esc(b[0])+'</span><span class="num"><span class="det-price">'+fmt(b[1])+'</span> <span class="det-brand">元</span><br><span class="det-brand">'+dtxt+'</span></span></div>';
+    });
+    box.innerHTML=h;
+  }
+  document.getElementById('detBg').classList.add('show');
+}
+document.getElementById('detClose').onclick=()=>document.getElementById('detBg').classList.remove('show');
+document.getElementById('detCancel').onclick=()=>document.getElementById('detBg').classList.remove('show');
+document.getElementById('detBg').addEventListener('click',e=>{ if(e.target.id==='detBg') document.getElementById('detBg').classList.remove('show'); });
+document.getElementById('detEdit').onclick=()=>{ document.getElementById('detBg').classList.remove('show'); if(detId) openMatModal(detId); };
+
 function renderMaterials(){
   fillCatSelect(document.getElementById('m_cat'), true);
   fillCatSelect(document.getElementById('pickCat'), true);
@@ -993,7 +1045,7 @@ function renderMaterials(){
     }
     const tr=document.createElement('tr');
     const price=matPrice(m);
-    tr.innerHTML='<td>'+esc(m.name)+'</td><td><span class="tag">'+esc(m.category)+'</span></td><td>'+esc(m.spec||'—')+'</td>'
+    tr.innerHTML='<td><span class="mlink" data-detail="'+m.id+'">'+esc(m.name)+'</span></td><td><span class="tag">'+esc(m.category)+'</span></td><td>'+esc(m.spec||'—')+'</td>'
       +brandCell+'<td>'+esc(m.unit)+'</td><td class="num">'+fmt(price)+'</td>'
       +'<td class="no-print"><button class="btn ghost sm" data-edit="'+m.id+'">编辑</button> <button class="btn danger sm" data-del="'+m.id+'">删</button></td>';
     tb.appendChild(tr);
@@ -1001,6 +1053,7 @@ function renderMaterials(){
   tb.querySelectorAll('.bsel').forEach(sel=>{
     sel.onchange=()=>{ setBrandPick(sel.dataset.b, sel.value); renderMaterials(); };
   });
+  tb.querySelectorAll('[data-detail]').forEach(el=>el.onclick=()=>openDetail(el.dataset.detail));
   tb.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openMatModal(b.dataset.edit));
   tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
     if(confirm('确认删除该材料？')){ materials=materials.filter(x=>x.id!==b.dataset.del); persist(); renderMaterials(); }
@@ -1429,12 +1482,15 @@ function renderPick(){
       brandCell='<td><select class="psel" data-p="'+m.id+'">'+opts+'</select></td>';
     }
     const tr=document.createElement('tr'); tr.className='pick-row';
-    tr.innerHTML='<td>'+esc(m.name)+'</td><td><span class="tag">'+esc(m.category)+'</span></td><td>'+esc(m.spec||'—')+'</td>'
+    tr.innerHTML='<td><span class="mlink" data-detail="'+m.id+'">'+esc(m.name)+'</span></td><td><span class="tag">'+esc(m.category)+'</span></td><td>'+esc(m.spec||'—')+'</td>'
       +brandCell+'<td>'+esc(m.unit)+'</td><td class="num">'+fmt(pickPrice(m,cur))+'</td><td><button class="btn sm">选</button></td>';
     const showPrice=()=>{ const c=tr.querySelector('td.num'); if(c) c.textContent=fmt(pickPrice(m,cur)); };
     tr.querySelectorAll('.psel').forEach(s=>{
       s.onclick=e=>e.stopPropagation();
       s.onchange=()=>{ cur=s.value; showPrice(); };
+    });
+    tr.querySelectorAll('[data-detail]').forEach(el=>{
+      el.onclick=e=>{ e.stopPropagation(); openDetail(el.dataset.detail); };
     });
     tr.onclick=()=>{
       const f=cityFactor(document.getElementById('q_city').value);
