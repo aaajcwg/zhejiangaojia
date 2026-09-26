@@ -297,7 +297,7 @@
       </div>
       <div class="table-scroll compact" style="margin-top:10px;">
         <table>
-          <thead><tr><th>名称</th><th>分类</th><th>规格</th><th>单位</th><th class="num">基准单价(元)</th><th class="no-print">操作</th></tr></thead>
+          <thead><tr><th>名称</th><th>分类</th><th>规格</th><th>品牌</th><th>单位</th><th class="num">基准单价(元)</th><th class="no-print">操作</th></tr></thead>
           <tbody id="matBody"></tbody>
         </table>
       </div>
@@ -386,7 +386,7 @@
     </div>
     <div class="table-scroll compact">
       <table>
-        <thead><tr><th>名称</th><th>分类</th><th>规格</th><th>单位</th><th class="num">基准价</th><th></th></tr></thead>
+        <thead><tr><th>名称</th><th>分类</th><th>规格</th><th>品牌</th><th>单位</th><th class="num">基准价</th><th></th></tr></thead>
         <tbody id="pickBody"></tbody>
       </table>
     </div>
@@ -405,6 +405,7 @@
       <div><label>规格</label><input id="mat_spec"></div>
       <div><label>单位 *</label><input id="mat_unit" placeholder="吨/米/㎡/桶…"></div>
       <div><label>基准单价(元) *</label><input id="mat_price" type="number" step="0.01" min="0" inputmode="decimal"></div>
+      <div style="grid-column:1/-1;"><label>品牌价格（可选）格式：品牌=价格,品牌=价格</label><input id="mat_brand" placeholder="例：海螺水泥=402,华润水泥=396"></div>
     </div>
     <div class="row-actions">
       <button class="btn block" id="matSave">保存</button>
@@ -432,6 +433,152 @@ const CITY_FACTOR_PROV = {
   "陕西":0.960,"甘肃":0.970,"青海":1.020,"宁夏":0.970,"新疆":1.030
 };
 const DEFAULT_CITY = Object.assign({}, CITY_FACTOR_PROV, CITY_FACTOR_ZJ);
+/* ============ 知名品牌价格库（浙江市场参考价） ============
+   键：材料名称|规格     值：[品牌, 该品牌单价]
+   维护：材料库 → 编辑该材料 → “品牌价格”框，格式 品牌=价格,品牌=价格
+   说明：价格为含税市场参考价，随行就市，仅供报价参考，可在材料库内自行修改。
+*/
+const BRAND_PRICES = {
+/* —— 水泥及骨料 —— */
+"复合硅酸盐水泥 PO42.5 袋装|袋装":[["海螺水泥",402],["华润水泥",396],["南方水泥",388],["中国建材",392]],
+"复合硅酸盐水泥 PO42.5 散装|散装":[["海螺水泥",372],["华润水泥",366],["南方水泥",360],["中国建材",364]],
+"普通硅酸盐水泥 PO52.5|":[["海螺水泥",448],["华润水泥",440],["南方水泥",432]],
+"商品混凝土 C15|C15":[["三狮商砼",378],["中商品砼",372],["建设商砼",380]],
+"商品混凝土 C30|C30":[["三狮商砼",434],["中商品砼",428],["建设商砼",438]],
+"商品混凝土 C50|C50":[["三狮商砼",518],["中商品砼",510],["建设商砼",522]],
+"中砂（河砂）|中砂":[["钱塘江砂",142],["内河砂",135],["机制砂",126]],
+"碎石 5-20mm|5-20mm":[["武康碎石",120],["长兴碎石",115],["再生骨料",98]],
+/* —— 砂浆外加剂 —— */
+"砌筑砂浆 M10 预拌|M10":[["海螺砂浆",386],["中建材",380],["本地预拌",376]],
+"干混砂浆 M10|M10 散装":[["海螺砂浆",328],["中建材",322],["本地干混",316]],
+"减水剂 聚羧酸|液体 含固10%":[["科盛",2450],["江苏博特",2420],["本地复配",2360]],
+/* —— 钢材 —— */
+"螺纹钢 HRB400 Φ12|Φ12":[["沙钢",3950],["永钢",3935],["中天钢铁",3915],["宝武",3930],["鞍钢",3890]],
+"螺纹钢 HRB400 Φ16-25|Φ16-25":[["沙钢",3830],["永钢",3820],["中天钢铁",3795],["宝武",3810],["鞍钢",3780]],
+"盘螺 HRB400 Φ8-10|Φ8-10":[["沙钢",4015],["永钢",4000],["中天钢铁",3970],["宝武",3990]],
+"高线 HPB300 Φ6.5-10|Φ6.5-10":[["沙钢",3945],["中天钢铁",3918],["永钢",3930]],
+"冷轧带肋钢筋|CRB550":[["沙钢",4180],["永钢",4165],["中天钢铁",4140]],
+/* —— 型材钢板 —— */
+"工字钢 Q235|":[["马钢",4130],["莱钢",4095],["宝武",4115],["鞍钢",4080]],
+"角钢 Q235|":[["马钢",4075],["莱钢",4040],["宝武",4060],["鞍钢",4025]],
+"钢板 Q235 20mm|Q235 20mm 中板":[["宝武",4210],["鞍钢",4175],["沙钢",4200],["马钢",4185]],
+"无缝钢管 219×6|20# 219×6mm":[["宝钢钢管",5020],["天津钢管",4980],["攀钢钢管",4940],["华歧",4960]],
+"H型钢|Q235 200×100":[["马钢",4180],["莱钢",4145],["宝武",4165]],
+"H型钢|Q345 300×150":[["马钢",4310],["莱钢",4270],["宝武",4290]],
+"槽钢|Q235 10#":[["马钢",42.6],["莱钢",41.8],["宝武",42.2]],
+"等边角钢|Q235 50×5":[["马钢",24.4],["莱钢",23.8],["宝武",24.1]],
+"扁钢|Q235 40×4":[["马钢",6.2],["莱钢",6.0],["宝武",6.1]],
+"花纹钢板|Q235 3mm":[["宝武",4370],["鞍钢",4340],["沙钢",4360]],
+"镀锌钢板|DX51D 0.5mm":[["宝武",27.5],["华岐",26.8],["马钢",27.0]],
+"圆钢|45# Φ25":[["沙钢",4370],["永钢",4355],["中天钢铁",4330]],
+/* —— 砖瓦石材 —— */
+"烧结普通砖 240×115×53|240×115×53":[["海螺建材",396],["三狮建材",385],["本地窑厂",378]],
+"烧结多孔砖 KP1|KP1":[["海螺建材",468],["三狮建材",458],["本地窑厂",450]],
+"混凝土标砖|240×115×53":[["海螺建材",426],["三狮建材",415],["本地砖厂",408]],
+"加气混凝土砌块|600×200×100":[["海螺建材",296],["中材科技",289],["本地加气",282]],
+"蒸压加气块|B06 600×200×200":[["海螺建材",276],["中材科技",270],["本地加气",264]],
+"大理石板材 600×600|600×600":[["福建水头",188],["环球石材",205],["本地石材",175]],
+"花岗岩板材 600×600|600×600":[["福建水头",228],["环球石材",248],["本地石材",215]],
+"仿石砖|300×150 芝麻灰":[["腾达",66],["东鹏",72],["本地厂",64]],
+"透水砖|200×100×60":[["海螺建材",80],["中材科技",85],["本地厂",76]],
+/* —— 管材管件 —— */
+"PVC-U 排水管 DN110|DN110":[["中国联塑",20.5],["公元",19.6],["中财管道",18.6],["宝塑",19.0]],
+"PVC-U 排水管 DN160|DN160 环刚8":[["中国联塑",47],["公元",45],["中财管道",43.5],["宝塑",44]],
+"PPR 冷水管 DN25|DN25":[["伟星新材",8.3],["中国联塑",7.6],["中财管道",7.0],["公元",7.4]],
+"PPR 热水管 DN20|DN20":[["伟星新材",7.7],["中国联塑",7.1],["中财管道",6.5],["公元",6.9]],
+"镀锌钢管 DN100|DN100":[["华岐",70],["迈克",68],["国标钢管",66]],
+"PE 给水管 DN63|DN63":[["中国联塑",15.5],["万邦",14.3],["中财管道",13.6],["公元",14.0]],
+"PE 给水管|PE100 dn110 1.0MPa":[["中国联塑",44],["万邦",42.5],["中财管道",40.5]],
+"铸铁排水管 DN150|DN150":[["公元",98],["中国联塑",96],["铸铁管业",92]],
+"不锈钢波纹管|DN15 编织软管":[["盾牌",13],["苏尔特",12],["本地厂",11]],
+/* —— 阀门水暖 —— */
+"闸阀|Z45X-16 暗杆 DN50":[["上海气动",98],["苏高",95],["上上阀",92]],
+"闸阀|Z45X-16 暗杆 DN100":[["上海气动",215],["苏高",210],["上上阀",205]],
+"截止阀|J11W-16 DN50":[["苏高",90],["上上阀",88],["本地厂",84]],
+"球阀|Q11F-16 内丝 DN25":[["苏高",26],["上上阀",25],["本地厂",23]],
+"蝶阀|D371X-16 对夹 DN150":[["上海气动",330],["苏高",320],["上上阀",315]],
+"水表|旋翼湿式 DN25":[["金鼎",68],["三力士",65],["本地厂",62]],
+"地漏|DN50 304不锈钢":[["九牧",30],["箭牌",28],["本地厂",26]],
+"角阀|4分 铜体":[["九牧",16],["箭牌",15],["本地厂",13]],
+/* —— 电线电缆 —— */
+"铜芯线 BV 2.5mm²|2.5mm²":[["远东电缆",248],["宝胜股份",242],["上上电缆",238],["亨通光电",236]],
+"铜芯线 BV 4mm²|4mm²":[["远东电缆",382],["宝胜股份",375],["上上电缆",368],["亨通光电",365]],
+"铜芯线 BV 6mm²|6mm²":[["远东电缆",545],["宝胜股份",535],["上上电缆",525]],
+"电力电缆 YJV 3×4|3×4":[["远东电缆",24.8],["宝胜股份",24.2],["上上电缆",23.6],["亨通光电",23.4]],
+"电力电缆 YJV 4×16|4×16":[["远东电缆",82],["宝胜股份",80],["上上电缆",78]],
+"电缆桥架 200×100|200×100":[["江苏亨通",58],["中国宝胜",56],["本地厂",52]],
+/* —— 电工电料 —— */
+"微型断路器|DZ47-63 C32 1P":[["正泰电器",30],["德力西",28],["人民电器",29],["施耐德",46]],
+"漏电保护器|DZ47LE-32 C32 30mA":[["正泰电器",68],["德力西",65],["人民电器",66],["施耐德",96]],
+"五孔插座|86型 10A":[["正泰电器",16],["德力西",15],["公牛",17],["施耐德",22]],
+"网线|超五类非屏蔽 305m":[["安普",300],["秋叶原",285],["一舟",268]],
+/* —— 灯具光源 —— */
+"LED 灯管|T8 1.2m 18W":[["欧普照明",18],["雷士照明",16],["三雄极光",22],["佛山照明",15]],
+"LED 面板灯|600×600 36W":[["欧普照明",72],["雷士照明",68],["三雄极光",85]],
+"LED 投光灯|100W IP65":[["欧普照明",92],["雷士照明",88],["三雄极光",110]],
+"LED 工矿灯|100W":[["欧普照明",135],["雷士照明",128],["三雄极光",155]],
+/* —— 玻璃制品 —— */
+"浮法玻璃 5mm|5mm 白玻":[["中国玻璃",40],["南玻",42],["中建材",39]],
+"浮法玻璃 8mm|8mm 白玻":[["中国玻璃",57],["南玻",59],["中建材",56]],
+"钢化玻璃|8mm":[["中国玻璃",98],["南玻",102],["中建材",95]],
+"中空玻璃|5+9A+5":[["中国玻璃",140],["南玻",145],["中建材",138]],
+"镀膜玻璃|6mm Low-E":[["中国玻璃",92],["南玻",96],["中建材",90]],
+/* —— 涂料化工 —— */
+"内墙乳胶漆 18L|18L":[["立邦",362],["多乐士",348],["嘉宝莉",332],["都芳",385],["华润漆",340]],
+"外墙真石漆|":[["立邦",10.6],["嘉宝莉",9.8],["巴洛克",9.2],["本地厂",8.8]],
+"腻子粉|20kg":[["美巢",33],["汉高",30],["立邦",32],["本地厂",27]],
+"外墙弹性涂料|丙烯酸 弹性":[["立邦",23],["嘉宝莉",22],["巴洛克",21]],
+"氟碳漆|双组份 金属面":[["立邦",68],["嘉宝莉",65],["巴洛克",62]],
+"环氧地坪漆|溶剂型 面涂":[["美缝王",26],["西卡",32],["本地厂",24]],
+"环氧富锌底漆|双组份 锌含量60%":[["中涂化工",33],["海洋化工",35],["本地厂",30]],
+/* —— 防水保温 —— */
+"SBS 防水卷材 4mm|4mm":[["东方雨虹",34],["科顺股份",32.5],["卓宝科技",33],["宏源防水",30.5]],
+"聚氨酯防水涂料|":[["东方雨虹",20.5],["科顺股份",19.5],["宏源防水",18.5]],
+"聚合物水泥防水涂料|JS II型":[["东方雨虹",17.5],["科顺股份",17],["卓宝科技",16.5]],
+"挤塑聚苯板 XPS 30mm|30mm":[["万华化学",29],["中材科技",28],["本地厂",26.5]],
+"岩棉板 50mm|50mm":[["欧麦",44],["中材科技",43],["本地厂",41]],
+"无机保温砂浆|A型 35kg":[["圣戈班",38],["亚士创能",36],["本地厂",33]],
+/* —— 门窗 —— */
+"断桥铝窗|55系列 中空玻璃":[["皇派门窗",720],["希洛",700],["兴发铝业",680],["海鸥门窗",660]],
+"断桥铝窗|70系列 三玻两腔":[["皇派门窗",880],["希洛",860],["兴发铝业",850],["海鸥门窗",820]],
+"铝合金平开窗|":[["兴发铝业",542],["凤铝铝业",522],["亚材铝业",505]],
+"塑钢门|":[["皇派门窗",700],["海鸥",680],["本地厂",660]],
+"实木复合门|":[["梦天木门",960],["千川木门",905],["美心",880],["星月神",860]],
+"防盗门|":[["盼盼安全门",1250],["王力",1200],["星月神",1180],["美心",1150]],
+"钢质防火门|甲级 含五金":[["星宇",530],["福建双阳",520],["本地厂",505]],
+"电动卷帘门|彩钢 0.5mm":[["红门",268],["太平洋",262],["本地厂",255]],
+/* —— 木材板材 —— */
+"木方 40×80mm|落叶松 40×80mm":[["兔宝宝",6.4],["千年舟",6.1],["鲁丽",5.9],["本地材",5.8]],
+"胶合板|杨木芯 9mm 1220×2440":[["兔宝宝",42],["千年舟",40],["莫干山",39],["鲁丽",38]],
+"胶合板|桉木芯 12mm 1220×2440":[["兔宝宝",58],["千年舟",56],["莫干山",55],["鲁丽",53]],
+"胶合板|桉木芯 15mm 1220×2440":[["兔宝宝",72],["千年舟",70],["莫干山",68],["鲁丽",66]],
+"细木工板|杉木芯 17mm 1220×2440":[["兔宝宝",120],["千年舟",113],["莫干山",108],["鲁丽",105]],
+"多层板|桉木芯 15mm 1220×2440":[["兔宝宝",79],["千年舟",76],["莫干山",73],["鲁丽",71]],
+"中密度纤维板|18mm 1220×2440":[["兔宝宝",66],["千年舟",64],["莫干山",62]],
+"木模板 1830×915|松木 1830×915×14mm":[["华胜模板",57],["一龙模板",55],["本地厂",53]],
+"木龙骨|落叶松 30×40mm":[["兔宝宝",5.9],["千年舟",5.7],["本地厂",5.5]],
+/* —— 泵阀消防 —— */
+"潜水泵|QDX10-38 0.75kW":[["南方泵业",420],["新界泵业",385],["格兰富",560]],
+"管道离心泵|ISW65-160":[["南方泵业",1020],["新界泵业",980],["凯泉",1150]],
+"灭火器|MFZ/ABC4 干粉":[["海湾消防",60],["全国消防",55],["本地厂",52]],
+"喷淋头|ZSTX-15 68℃下垂":[["海湾消防",13],["消防股份",12],["本地厂",11]],
+"消火栓箱|800×650 明装":[["海湾消防",495],["消防股份",480],["本地厂",465]],
+"湿式报警阀|ZSFZ DN100":[["海湾消防",1300],["消防股份",1250],["本地厂",1200]],
+/* —— 紧固焊材 —— */
+"膨胀螺栓|M10×100 镀锌":[["正泰",1.3],["本地标准件",1.2],["力标螺栓",1.25]],
+"化学锚栓|M12×160":[["喜利得",12],["南京曼卡特",9],["本地厂",8.5]],
+"焊条|J422 Φ3.2":[["大西洋焊材",6.9],["金桥焊材",6.8],["本地厂",6.5]],
+"六角螺栓|M12×40 4.8级":[["正泰",0.85],["力标螺栓",0.8],["本地标准件",0.75]],
+/* —— 周转材料 —— */
+"钢管脚手架|Φ48×3.0 6m Q235":[["华岐",70],["本地租赁",68],["国标管",65]],
+"扣件|十字直角 铸铁":[["华岐",6.8],["本地租赁",6.5],["标准件",6.2]],
+"密目安全网|6×1.8m 阻燃":[["中安",26],["本地厂",25],["华源",24]],
+/* —— 其他 —— */
+"瓷砖 800×800|800×800":[["东鹏瓷砖",48],["马可波罗",52],["诺贝尔",50],["本地厂",44]],
+"强化木地板|":[["圣象地板",105],["德尔地板",100],["千川",95]],
+"LED 灯带|2835 60珠/m":[["欧普照明",4.8],["三雄极光",5.0],["本地厂",4.5]]
+};
+
 function defaultMaterials(){
   const m = [
     ["复合硅酸盐水泥 PO42.5 袋装","水泥及骨料","袋装","吨",390],
@@ -640,8 +787,27 @@ function defaultMaterials(){
     ["氟碳漆","涂料化工","双组份 金属面","kg",65],
     ["环氧地坪漆","涂料化工","溶剂型 面涂","kg",25]
   ];
-  return m.map((r,i)=>({id:"m"+(i+1),name:r[0],category:r[1],spec:r[2],unit:r[3],price:r[4]}));
+  return m.map((r,i)=>{
+    const b=BRAND_PRICES[(r[0]+'|'+r[2])];
+    return {id:"m"+(i+1),name:r[0],category:r[1],spec:r[2],unit:r[3],price:r[4],brand:b||null};
+  });
 }
+/* ============ 品牌选中与取价 ============ */
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>]/g,function(c){ return c==="&"?"&amp;":(c==="<"?"&lt;":"&gt;"); });
+}
+
+const LS_BRAND = 'zjbm_brandpick';
+let brandPick = load(LS_BRAND, {});
+function saveBrandPick(){ try{ localStorage.setItem(LS_BRAND, JSON.stringify(brandPick)); }catch(e){} }
+function brandsOf(m){ return Array.isArray(m.brand)?m.brand:[]; }
+function pickedBrand(m){ const b=brandPick[m.id]; return (b && brandsOf(m).some(x=>x[0]===b)) ? b : ""; }
+function matPrice(m){
+  const b=pickedBrand(m);
+  if(b){ const hit=brandsOf(m).find(x=>x[0]===b); if(hit) return +hit[1]; }
+  return Number(m.price)||0;
+}
+function setBrandPick(id,brand){ if(brand) brandPick[id]=brand; else delete brandPick[id]; saveBrandPick(); }
 
 const LS = { mat:"zjbm_materials", quote:"zjbm_quotes", set:"zjbm_settings" };
 function load(k,def){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){ return def; } }
@@ -808,13 +974,32 @@ function renderMaterials(){
   const kw=(document.getElementById('m_search').value||'').trim().toLowerCase();
   const cat=document.getElementById('m_cat').value;
   const tb=document.getElementById('matBody'); tb.innerHTML='';
-  const list=materials.filter(m=>(!cat||m.category===cat) && (!kw || (m.name+m.spec).toLowerCase().includes(kw)));
-  if(list.length===0){ tb.innerHTML='<tr><td colspan="6" class="empty">没有匹配的材料</td></tr>'; return; }
+  const hit=(m)=>{
+    if(cat && m.category!==cat) return false;
+    if(!kw) return true;
+    const bs=brandsOf(m).map(b=>b[0]).join(' ');
+    return (m.name+' '+m.spec+' '+bs).toLowerCase().includes(kw);
+  };
+  const list=materials.filter(hit);
+  if(list.length===0){ tb.innerHTML='<tr><td colspan="7" class="empty">没有匹配的材料</td></tr>'; return; }
   list.forEach(m=>{
+    const bs=brandsOf(m);
+    const cur=pickedBrand(m);
+    let brandCell='<td class="hint">—</td>';
+    if(bs.length){
+      let opts='<option value="">通用基准价</option>';
+      bs.forEach(b=>{ opts+='<option value="'+b[0]+'"'+(cur===b[0]?' selected':'')+'>'+b[0]+'（'+fmt(b[1])+'元）</option>'; });
+      brandCell='<td><select class="bsel" data-b="'+m.id+'">'+opts+'</select></td>';
+    }
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${m.name}</td><td><span class="tag">${m.category}</span></td><td>${m.spec||'—'}</td><td>${m.unit}</td><td class="num">${fmt(m.price)}</td>
-      <td class="no-print"><button class="btn ghost sm" data-edit="${m.id}">编辑</button> <button class="btn danger sm" data-del="${m.id}">删</button></td>`;
+    const price=matPrice(m);
+    tr.innerHTML='<td>'+esc(m.name)+'</td><td><span class="tag">'+esc(m.category)+'</span></td><td>'+esc(m.spec||'—')+'</td>'
+      +brandCell+'<td>'+esc(m.unit)+'</td><td class="num">'+fmt(price)+'</td>'
+      +'<td class="no-print"><button class="btn ghost sm" data-edit="'+m.id+'">编辑</button> <button class="btn danger sm" data-del="'+m.id+'">删</button></td>';
     tb.appendChild(tr);
+  });
+  tb.querySelectorAll('.bsel').forEach(sel=>{
+    sel.onchange=()=>{ setBrandPick(sel.dataset.b, sel.value); renderMaterials(); };
   });
   tb.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openMatModal(b.dataset.edit));
   tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
@@ -836,6 +1021,7 @@ function openMatModal(id){
     document.getElementById('mat_spec').value=m.spec||'';
     document.getElementById('mat_unit').value=m.unit;
     document.getElementById('mat_price').value=m.price;
+    document.getElementById('mat_brand').value=(Array.isArray(m.brand)&&m.brand.length)? m.brand.map(b=>b[0]+'='+b[1]).join(',') : '';
   } else {
     document.getElementById('matModalTitle').textContent='新增材料';
     document.getElementById('mat_id').value='';
@@ -844,6 +1030,7 @@ function openMatModal(id){
     document.getElementById('mat_spec').value='';
     document.getElementById('mat_unit').value='';
     document.getElementById('mat_price').value='';
+    document.getElementById('mat_brand').value='';
   }
   modal.classList.add('show');
 }
@@ -858,6 +1045,9 @@ document.getElementById('matSave').onclick=()=>{
   if(!name||!cat||!unit||isNaN(price)){ alert('请完整填写名称、分类、单位和单价'); return; }
   const id=document.getElementById('mat_id').value;
   const data={name,spec:document.getElementById('mat_spec').value.trim(),category:cat,unit,price};
+  const btxt=document.getElementById('mat_brand').value.trim();
+  data.brand=btxt? btxt.split(/[,，]/).map(s=>s.trim()).filter(Boolean).map(s=>{ const i=s.lastIndexOf('='); if(i<0) return null; const n=parseFloat(s.slice(i+1)); if(isNaN(n)) return null; return [s.slice(0,i), n]; }).filter(Boolean) : null;
+  if(id){ const old=materials.find(x=>x.id===id); if(old && Array.isArray(old.brand) && old.brand.length && !data.brand){ data.brand=old.brand; } }
   if(id){ const m=materials.find(x=>x.id===id); Object.assign(m,data); }
   else { data.id=uid('m'); materials.push(data); }
   persist(); renderMaterials();
@@ -866,8 +1056,8 @@ document.getElementById('matSave').onclick=()=>{
 
 /* 导出/导入材料库 */
 document.getElementById('btnExpMat').onclick=()=>{
-  const csv=[['名称','分类','规格','单位','基准单价']];
-  materials.forEach(m=>csv.push([m.name,m.category,m.spec,m.unit,m.price]));
+  const csv=[['名称','分类','规格','单位','基准单价','品牌价格']];
+  materials.forEach(m=>csv.push([m.name,m.category,m.spec,m.unit,m.price,(Array.isArray(m.brand)&&m.brand.length)? m.brand.map(b=>b[0]+'='+b[1]).join(' ') : '']));
   downloadCSV('浙江建材材料库.csv',csv);
 };
 document.getElementById('btnImpMat').onclick=()=>document.getElementById('impFile').click();
@@ -912,20 +1102,33 @@ function applyPrices(items, source, date, city){
   let matched=0; const toAdd=[];
   items.forEach(it=>{
     const k=it.name+'|'+(it.spec||'');
-    if(map[k]){ map[k].price=it.price; if(it.unit) map[k].unit=it.unit; if(it.category) map[k].category=it.category; matched++; }
+    if(map[k]){
+      const old=Number(map[k].price);
+      map[k].price=it.price;
+      // 基准价变动时，品牌价按同比例同步，保持品牌间价差
+      if(old>0 && Number(it.price)>0 && Number(old)!==Number(it.price) && Array.isArray(map[k].brand) && map[k].brand.length){
+        const r=Number(it.price)/old;
+        map[k].brand=map[k].brand.map(b=>[b[0], +(Number(b[1])*r).toFixed(2)]);
+      }
+      if(it.unit) map[k].unit=it.unit; if(it.category) map[k].category=it.category; matched++;
+    }
     else toAdd.push(it);
   });
   let added=0;
   if(toAdd.length){
     // 自动合并新增项（不再弹窗询问，避免新材料被漏掉）
-    toAdd.forEach(it=>{ const m={id:uid('m'),name:it.name,category:it.category||'其他',spec:it.spec||'',unit:it.unit||'',price:it.price}; materials.push(m); map[m.name+'|'+m.spec]=m; added++; });
+    toAdd.forEach(it=>{
+      const m={id:uid('m'),name:it.name,category:it.category||'其他',spec:it.spec||'',unit:it.unit||'',price:it.price};
+      const bk=it.name+'|'+(it.spec||'');
+      if(BRAND_PRICES[bk]) m.brand=BRAND_PRICES[bk];
+      materials.push(m); map[m.name+'|'+m.spec]=m; added++;
+    });
     persist();
   }
   renderMaterials(); fillCitySelect();
   setSrcInfo(source,date,city);
 }
 
-/* 解析造价期刊 CSV（列序：名称,分类,规格,单位,价格） */
 function parseCsvClient(csv){
   const rows=csv.replace(/^﻿/,'').split(/\r?\n/).filter(r=>r.trim());
   const items=[];
@@ -1213,22 +1416,38 @@ function renderPick(){
   const kw=document.getElementById('pickSearch').value.trim().toLowerCase();
   const cat=document.getElementById('pickCat').value;
   const tb=document.getElementById('pickBody'); tb.innerHTML='';
-  const list=materials.filter(m=>(!cat||m.category===cat)&&(!kw||(m.name+m.spec).toLowerCase().includes(kw)));
-  if(list.length===0){ tb.innerHTML='<tr><td colspan="6" class="empty">无匹配</td></tr>'; return; }
+  const list=materials.filter(m=>(!cat||m.category===cat)&&(!kw||(m.name+m.spec+' '+brandsOf(m).map(b=>b[0]).join(' ')).toLowerCase().includes(kw)));
+  if(list.length===0){ tb.innerHTML='<tr><td colspan="7" class="empty">无匹配</td></tr>'; return; }
+  function pickPrice(m,brand){ return matPrice({id:m.id,brand:m.brand,price:m.price}); }
   list.forEach(m=>{
+    const bs=brandsOf(m);
+    const cur=pickedBrand(m);
+    let brandCell='<td class="hint">—</td>';
+    if(bs.length){
+      let opts='';
+      bs.forEach(b=>{ opts+='<option value="'+b[0]+'"'+(cur===b[0]?' selected':'')+'>'+b[0]+'（'+fmt(b[1])+'）</option>'; });
+      brandCell='<td><select class="psel" data-p="'+m.id+'">'+opts+'</select></td>';
+    }
     const tr=document.createElement('tr'); tr.className='pick-row';
-    tr.innerHTML=`<td>${m.name}</td><td><span class="tag">${m.category}</span></td><td>${m.spec||'—'}</td><td>${m.unit}</td><td class="num">${fmt(m.price)}</td><td><button class="btn sm">选</button></td>`;
+    tr.innerHTML='<td>'+esc(m.name)+'</td><td><span class="tag">'+esc(m.category)+'</span></td><td>'+esc(m.spec||'—')+'</td>'
+      +brandCell+'<td>'+esc(m.unit)+'</td><td class="num">'+fmt(pickPrice(m,cur))+'</td><td><button class="btn sm">选</button></td>';
+    const showPrice=()=>{ const c=tr.querySelector('td.num'); if(c) c.textContent=fmt(pickPrice(m,cur)); };
+    tr.querySelectorAll('.psel').forEach(s=>{
+      s.onclick=e=>e.stopPropagation();
+      s.onchange=()=>{ cur=s.value; showPrice(); };
+    });
     tr.onclick=()=>{
       const f=cityFactor(document.getElementById('q_city').value);
       const i=pickRowIndex;
-      currentQuote.items[i]={materialId:m.id,name:m.name,spec:m.spec,unit:m.unit,price:+(m.price*f).toFixed(2),qty:currentQuote.items[i].qty||1,loss:currentQuote.items[i].loss||settings.loss,subtotal:0};
+      if(!currentQuote) currentQuote={items:[]};
+      while(currentQuote.items.length<=i) currentQuote.items.push({name:'',spec:'',unit:'',price:0,qty:0,loss:settings.loss,subtotal:0});
+      currentQuote.items[i]={materialId:m.id,name:m.name,spec:m.spec,unit:m.unit,brand:cur||'',price:+(pickPrice(m,cur)*f).toFixed(2),qty:currentQuote.items[i].qty||1,loss:currentQuote.items[i].loss||settings.loss,subtotal:0};
       recalcRow(i); renderQuoteBody(); calcTotals();
       document.getElementById('pickBg').classList.remove('show');
     };
     tb.appendChild(tr);
   });
 }
-document.getElementById('pickClose').onclick=()=>document.getElementById('pickBg').classList.remove('show');
 document.getElementById('pickSearch').oninput=renderPick;
 document.getElementById('pickCat').onchange=renderPick;
 
