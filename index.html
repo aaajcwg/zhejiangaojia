@@ -343,7 +343,10 @@
         <div><label>默认税率 %</label><input id="s_tax" type="number" step="0.1" min="0" inputmode="decimal"></div>
         <div><label>默认运费(元)</label><input id="s_freight" type="number" step="1" min="0" inputmode="numeric"></div>
         <div><label>默认损耗 %</label><input id="s_loss" type="number" step="0.1" min="0" inputmode="decimal"></div>
+        <div><label>价格口径</label><select id="s_priceMode"><option value="wholesale">工程批发价</option><option value="retail">零售价（含配送/渠道）</option></select></div>
+        <div><label>零售系数 ×</label><input id="s_retailFactor" type="number" step="0.01" min="1" max="3" inputmode="decimal"></div>
       </div>
+      <p class="hint" id="priceModeHint" style="margin:8px 0 0;"></p>
     </div>
     <div class="card">
       <h2>实时价格数据源（关键）</h2>
@@ -918,13 +921,31 @@ let settings = load(LS.set, {
   company:"", contact:"", phone:"", address:"",
   tax:9, freight:0, loss:2,
   cityFactors:DEFAULT_CITY, baseCity:"杭州",
-  dataUrl:"./prices.json", useProxy:false
+  dataUrl:"./prices.json", useProxy:false,
+  priceMode:"wholesale", retailFactor:1.35
 });
 if(!settings.baseCity) settings.baseCity="杭州";
 if(!settings.cityFactors) settings.cityFactors=DEFAULT_CITY;
 else Object.keys(DEFAULT_CITY).forEach(k=>{ if(settings.cityFactors[k]===undefined) settings.cityFactors[k]=DEFAULT_CITY[k]; }); // 老数据迁移：补全新增地区系数
 if(!settings.dataUrl) settings.dataUrl="./prices.json";
 if(settings.useProxy===undefined) settings.useProxy=false;
+if(!settings.priceMode) settings.priceMode="wholesale";
+if(!settings.retailFactor) settings.retailFactor=1.35;
+
+/* 价格口径：工程批发价=1；零售价=×零售系数（含运费/渠道/小批量溢价） */
+function priceMul(){ return settings.priceMode==='retail' ? (parseFloat(settings.retailFactor)||1) : 1; }
+function effPrice(v){ return +(Number(v)*priceMul()).toFixed(2); }
+function repriceQuote(){
+  if(!currentQuote||!currentQuote.items) return;
+  const f=cityFactor(document.getElementById('q_city').value);
+  currentQuote.items.forEach((it,i)=>{
+    if(!it.materialId) return;
+    const m=materials.find(x=>x.id===it.materialId); if(!m) return;
+    if(it.brand) setBrandPick(m.id,it.brand);
+    it.price=+(matPrice(m)*f*priceMul()).toFixed(2); recalcRow(i);
+  });
+  renderQuoteBody(); calcTotals();
+}
 
 let currentQuote = null;
 let pickRowIndex = null;
@@ -1021,6 +1042,12 @@ function initCraft(){
 }
 
 /* ============ 设置页渲染 ============ */
+function updatePriceModeHint(){
+  const el=document.getElementById('priceModeHint'); if(!el) return;
+  el.textContent = settings.priceMode==='retail'
+    ? '当前：零售价口径（工程价 × '+settings.retailFactor+'），适合小批量、含配送上楼的散户报价。'
+    : '当前：工程批发价口径（整车/大批量、不含配送），零售价请在口径里切换并调整系数。';
+}
 function renderSettings(){
   document.getElementById('s_company').value=settings.company||'';
   document.getElementById('s_contact').value=settings.contact||'';
@@ -1031,6 +1058,11 @@ function renderSettings(){
   document.getElementById('s_loss').value=settings.loss;
   document.getElementById('s_dataurl').value=settings.dataUrl||'./prices.json';
   document.getElementById('s_proxy').checked=!!settings.useProxy;
+  document.getElementById('s_priceMode').value=settings.priceMode||'wholesale';
+  document.getElementById('s_retailFactor').value=settings.retailFactor||1.35;
+  updatePriceModeHint();
+  document.getElementById('s_priceMode').onchange=()=>{ settings.priceMode=document.getElementById('s_priceMode').value; persist(); updatePriceModeHint(); renderMaterials(); repriceQuote(); };
+  document.getElementById('s_retailFactor').onchange=()=>{ const v=parseFloat(document.getElementById('s_retailFactor').value); settings.retailFactor=(v&&v>=1)?v:1.35; persist(); updatePriceModeHint(); renderMaterials(); repriceQuote(); };
   const cf=document.getElementById('cityFactors'); cf.innerHTML='';
   Object.keys(settings.cityFactors).forEach(c=>{
     const d=document.createElement('div');
@@ -1074,16 +1106,17 @@ function openDetail(id){
   document.getElementById('detTitle').textContent=m.name;
   document.getElementById('detCat').textContent=m.category;
   document.getElementById('detSpec').textContent=(m.spec||'—')+' / '+(m.unit||'—');
-  document.getElementById('detBase').textContent=fmt(m.price)+' 元/'+(m.unit||'');
+  const mulTag = settings.priceMode==='retail' ? '（零售口径 ×'+settings.retailFactor+'）' : '（工程批发口径）';
+  document.getElementById('detBase').textContent=fmt(effPrice(m.price))+' 元/'+(m.unit||'')+' '+mulTag;
   const bs=brandsOf(m), box=document.getElementById('detBrands');
   if(!bs.length){
     box.innerHTML='<div class="empty" style="padding:10px;">该材料暂无品牌价格，点“编辑此材料”可添加</div>';
   } else {
-    let h='<div class="det-row" style="padding:6px 2px;"><span class="det-brand">品牌价格（'+bs.length+' 家）</span></div>';
+    let h='<div class="det-row" style="padding:6px 2px;"><span class="det-brand">品牌价格（'+bs.length+' 家）'+mulTag+'</span></div>';
     bs.forEach(b=>{
-      const d=+b[1]-Number(m.price);
-      const dtxt=(d===0?'与基准持平':(d>0?'+':'−')+fmt(Math.abs(d))+' 元');
-      h+='<div class="det-row"><span>'+esc(b[0])+'</span><span class="num"><span class="det-price">'+fmt(b[1])+'</span> <span class="det-brand">元</span><br><span class="det-brand">'+dtxt+'</span></span></div>';
+      const d=effPrice(b[1])-effPrice(m.price);
+      const dtxt=(Math.abs(d)<0.01?'与基准持平':(d>0?'+':'−')+fmt(Math.abs(d))+' 元');
+      h+='<div class="det-row"><span>'+esc(b[0])+'</span><span class="num"><span class="det-price">'+fmt(effPrice(b[1]))+'</span> <span class="det-brand">元</span><br><span class="det-brand">'+dtxt+'</span></span></div>';
     });
     box.innerHTML=h;
   }
@@ -1115,11 +1148,11 @@ function renderMaterials(){
     let brandCell='<td class="hint">—</td>';
     if(bs.length){
       let opts='<option value="">通用基准价</option>';
-      bs.forEach(b=>{ opts+='<option value="'+b[0]+'"'+(cur===b[0]?' selected':'')+'>'+b[0]+'（'+fmt(b[1])+'元）</option>'; });
+      bs.forEach(b=>{ opts+='<option value="'+b[0]+'"'+(cur===b[0]?' selected':'')+'>'+b[0]+'（'+fmt(effPrice(b[1]))+'元）</option>'; });
       brandCell='<td><select class="bsel" data-b="'+m.id+'">'+opts+'</select></td>';
     }
     const tr=document.createElement('tr');
-    const price=matPrice(m);
+    const price=effPrice(matPrice(m));
     tr.innerHTML='<td><span class="mlink" data-detail="'+m.id+'">'+esc(m.name)+'</span></td><td><span class="tag">'+esc(m.category)+'</span></td><td>'+esc(m.spec||'—')+'</td>'
       +brandCell+'<td>'+esc(m.unit)+'</td><td class="num">'+fmt(price)+'</td>'
       +'<td class="no-print"><button class="btn ghost sm" data-edit="'+m.id+'">编辑</button> <button class="btn danger sm" data-del="'+m.id+'">删</button></td>';
@@ -1553,13 +1586,13 @@ function renderPick(){
     let brandCell='<td class="hint">—</td>';
     if(bs.length){
       let opts='';
-      bs.forEach(b=>{ opts+='<option value="'+b[0]+'"'+(cur===b[0]?' selected':'')+'>'+b[0]+'（'+fmt(b[1])+'）</option>'; });
+      bs.forEach(b=>{ opts+='<option value="'+b[0]+'"'+(cur===b[0]?' selected':'')+'>'+b[0]+'（'+fmt(effPrice(b[1]))+'）</option>'; });
       brandCell='<td><select class="psel" data-p="'+m.id+'">'+opts+'</select></td>';
     }
     const tr=document.createElement('tr'); tr.className='pick-row';
     tr.innerHTML='<td><span class="mlink" data-detail="'+m.id+'">'+esc(m.name)+'</span></td><td><span class="tag">'+esc(m.category)+'</span></td><td>'+esc(m.spec||'—')+'</td>'
-      +brandCell+'<td>'+esc(m.unit)+'</td><td class="num">'+fmt(pickPrice(m,cur))+'</td><td><button class="btn sm">选</button></td>';
-    const showPrice=()=>{ const c=tr.querySelector('td.num'); if(c) c.textContent=fmt(pickPrice(m,cur)); };
+      +brandCell+'<td>'+esc(m.unit)+'</td><td class="num">'+fmt(effPrice(pickPrice(m,cur)))+'</td><td><button class="btn sm">选</button></td>';
+    const showPrice=()=>{ const c=tr.querySelector('td.num'); if(c) c.textContent=fmt(effPrice(pickPrice(m,cur))); };
     tr.querySelectorAll('.psel').forEach(s=>{
       s.onclick=e=>e.stopPropagation();
       s.onchange=()=>{ cur=s.value; showPrice(); };
@@ -1572,7 +1605,7 @@ function renderPick(){
       const i=pickRowIndex;
       if(!currentQuote) currentQuote={items:[]};
       while(currentQuote.items.length<=i) currentQuote.items.push({name:'',spec:'',unit:'',price:0,qty:0,loss:settings.loss,subtotal:0});
-      currentQuote.items[i]={materialId:m.id,name:m.name,spec:m.spec,unit:m.unit,brand:cur||'',price:+(pickPrice(m,cur)*f).toFixed(2),qty:currentQuote.items[i].qty||1,loss:currentQuote.items[i].loss||settings.loss,subtotal:0};
+      currentQuote.items[i]={materialId:m.id,name:m.name,spec:m.spec,unit:m.unit,brand:cur||'',price:+(pickPrice(m,cur)*f*priceMul()).toFixed(2),qty:currentQuote.items[i].qty||1,loss:currentQuote.items[i].loss||settings.loss,subtotal:0};
       recalcRow(i); renderQuoteBody(); calcTotals();
       document.getElementById('pickBg').classList.remove('show');
     };
