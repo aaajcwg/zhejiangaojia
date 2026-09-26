@@ -370,6 +370,15 @@
         <input type="file" id="csvFile" accept=".csv" style="display:none;">
       </div>
       <div id="dsMsg" class="hint" style="margin-top:8px;"></div>
+      <div class="grid g2" style="margin-top:14px;">
+        <div style="grid-column:1/-1;"><label>零售参考价数据源（jd_prices.json，可定时自动更新）</label>
+          <input id="s_jdurl" placeholder="./jd_prices.json" inputmode="url"></div>
+      </div>
+      <div class="row-actions">
+        <button class="btn sm" id="btnSyncJd">立即更新零售价</button>
+        <button class="btn ghost sm" id="btnExportJd">导出 jd_prices.json</button>
+      </div>
+      <div id="jdMsg" class="hint" style="margin-top:8px;">零售参考价：内置京东口径表（2026-09 整理）。配置上方地址后可由服务器定时推送最新行情覆盖。</div>
     </div>
     <div class="card">
       <h2>浙江各地区价格系数（相对杭州）</h2>
@@ -1102,10 +1111,13 @@ const JD_CAT_FACTOR = {
   "砂浆外加剂":1.3,
   "其他":1.35
 };
+let JD_OVERRIDE = {};   // 远程 jd_prices.json 覆盖表（定时自动更新）
+let JD_META = {updated:"",source:""};
 function jdRetail(m){
   if(!m) return 0;
   if(m.retail) return Number(m.retail)||0;
   const k=(m.name||"")+"|"+(m.spec||"");
+  if(JD_OVERRIDE[k]!==undefined) return +JD_OVERRIDE[k]||0;
   if(JD_RETAIL[k]!==undefined) return JD_RETAIL[k];
   return +(Number(m.price)*(JD_CAT_FACTOR[m.category]||1.35)).toFixed(2);
 }
@@ -1149,7 +1161,7 @@ let settings = load(LS.set, {
   company:"", contact:"", phone:"", address:"",
   tax:9, freight:0, loss:2,
   cityFactors:DEFAULT_CITY, baseCity:"杭州",
-  dataUrl:"./prices.json", useProxy:false,
+  dataUrl:"./prices.json", useProxy:false, jdUrl:"./jd_prices.json",
   priceMode:"wholesale", retailFactor:1.35, retailSource:"jd"
 });
 if(!settings.baseCity) settings.baseCity="杭州";
@@ -1160,6 +1172,7 @@ if(settings.useProxy===undefined) settings.useProxy=false;
 if(!settings.priceMode) settings.priceMode="wholesale";
 if(!settings.retailFactor) settings.retailFactor=1.35;
 if(!settings.retailSource) settings.retailSource="jd";
+if(!settings.jdUrl) settings.jdUrl="./jd_prices.json";
 
 /* 价格口径：工程批发价=1；零售价=×零售系数（含运费/渠道/小批量溢价） */
 function priceMul(){ return settings.priceMode==='retail' ? (parseFloat(settings.retailFactor)||1) : 1; }
@@ -1297,10 +1310,12 @@ function renderSettings(){
   document.getElementById('s_priceMode').value=settings.priceMode||'wholesale';
   document.getElementById('s_retailFactor').value=settings.retailFactor||1.35;
   document.getElementById('s_retailSource').value=settings.retailSource||'jd';
+  document.getElementById('s_jdurl').value=settings.jdUrl||'./jd_prices.json';
   updatePriceModeHint();
   document.getElementById('s_priceMode').onchange=()=>{ settings.priceMode=document.getElementById('s_priceMode').value; persist(); updatePriceModeHint(); renderMaterials(); repriceQuote(); };
   document.getElementById('s_retailFactor').onchange=()=>{ const v=parseFloat(document.getElementById('s_retailFactor').value); settings.retailFactor=(v&&v>=1)?v:1.35; persist(); updatePriceModeHint(); renderMaterials(); repriceQuote(); };
   document.getElementById('s_retailSource').onchange=()=>{ settings.retailSource=document.getElementById('s_retailSource').value; persist(); updatePriceModeHint(); renderMaterials(); repriceQuote(); };
+  document.getElementById('s_jdurl').onchange=()=>{ settings.jdUrl=document.getElementById('s_jdurl').value.trim()||'./jd_prices.json'; persist(); };
   const cf=document.getElementById('cityFactors'); cf.innerHTML='';
   Object.keys(settings.cityFactors).forEach(c=>{
     const d=document.createElement('div');
@@ -1667,6 +1682,39 @@ function exportPricesJson(){
   alert('已导出 prices.json（'+materials.length+' 项）。\n把它放到你的服务器/NAS/k3s 与网页同目录（或修改“数据源地址”指向它），手机打开本页即可实时读取。');
 }
 
+/* ===== 零售参考价：远程数据源同步 / 导出 ===== */
+async function syncJdPrices(silent){
+  const el=document.getElementById('jdMsg');
+  const url=(settings.jdUrl||'./jd_prices.json');
+  if(location.protocol==='file:'){ if(el) el.textContent='本地 file:// 模式无法拉取远程零售价表，当前用内置表。'; return; }
+  if(el&&!silent) el.textContent='● 正在拉取零售参考价…';
+  try{
+    const r=await fetch(url+(url.includes('?')?'&':'?')+'_t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const tbl=j&&(j.prices||j.items&&j.items.reduce((o,x)=>{o[(x.name||'')+'|'+(x.spec||'')]=x.price;return o;},{})||j);
+    if(!tbl||typeof tbl!=='object') throw new Error('数据格式不正确');
+    JD_OVERRIDE=tbl;
+    JD_META={updated:j.updated||'',source:j.source||''};
+    renderMaterials(); repriceQuote();
+    if(el) el.textContent='✓ 已更新零售参考价：'+Object.keys(tbl).length+' 项'+(JD_META.updated?'（'+JD_META.updated+'）':'')+(JD_META.source?' · '+JD_META.source:'');
+  }catch(e){
+    if(el&&!silent) el.textContent='✗ 零售价表拉取失败（'+e.message+'），继续用内置表。';
+    else if(el) el.textContent='零售参考价：内置京东口径表（2026-09 整理）。';
+  }
+}
+function exportJdJson(){
+  const prices={};
+  materials.forEach(m=>{ prices[(m.name||'')+'|'+(m.spec||'')]=jdRetail(m)||0; });
+  const data={updated:today(),source:'系统导出·京东口径零售参考价',prices};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='jd_prices.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  alert('已导出 jd_prices.json（'+materials.length+' 项零售参考价）。\n放到网页同目录即可覆盖内置表；配合服务器定时任务可实现自动更新。');
+}
+document.getElementById('btnSyncJd').onclick=()=>syncJdPrices(false);
+document.getElementById('btnExportJd').onclick=exportJdJson;
+
 document.getElementById('btnSync').onclick=()=>syncPrices(false);
 document.getElementById('btnTestSync').onclick=()=>syncPrices(false);
 document.getElementById('btnFetchZJ').onclick=fetchZaojiaLinks;
@@ -1982,6 +2030,7 @@ function boot(){
   if(location.protocol!=='file:'){
     setSrcStatus('src-warn','● 正在拉取实时价…');
     syncPrices(true);
+    syncJdPrices(true);
   } else {
     setSrcStatus('src-offline','● 本地模式（file:// 无法拉取远程价）');
     document.getElementById('srcMsg').textContent='你是以本地文件方式打开，价格用的是本地缓存/内置参考价。把本页放到 Web 服务器后即可自动拉取实时价。';
